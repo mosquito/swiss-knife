@@ -17,7 +17,7 @@ const DisclaimerFooter = () => {
           <span><strong>Privacy:</strong> Runs in browser. Network disabled.</span>
         </p>
         <a
-          href="/swiss-knife.zip"
+          href="./swiss-knife.zip"
           download="swiss-knife.zip"
           className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 whitespace-nowrap"
           aria-label="Download offline version"
