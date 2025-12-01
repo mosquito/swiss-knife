@@ -495,8 +495,8 @@ const BarcodeTool = () => {
             <div className="flex gap-2 flex-wrap text-xs">
               <button onClick={handleDownload} className="px-3 py-1 rounded bg-jwtBlue text-white font-semibold hover:opacity-90">Download {outputFormat.toUpperCase()}</button>
               <button onClick={handleCopyImage} className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:opacity-90">Copy Image</button>
-              <button onClick={handleShare} className="px-3 py-1 rounded bg-jwtPurple text-white font-semibold hover:opacity-90">Share Link</button>
-              <button onClick={()=>setInverted(v=>!v)} className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:opacity-90">{inverted ? 'Normal Colors' : 'Invert Colors'}</button>
+              <button onClick={handleShare} className="px-3 py-1 rounded bg-jwtPurple text-white font-semibold hover:opacity-90">Share</button>
+              <button onClick={()=>setInverted(v=>!v)} className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:opacity-90">{inverted ? 'Black on White' : 'White on Black'}</button>
             </div>
             {error && <div className="text-[10px] text-red-600 font-mono">{error}</div>}
           </div>
