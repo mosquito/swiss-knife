@@ -284,7 +284,7 @@ const UuidTool = () => {
     navigator.clipboard.writeText(text);
   };
 
-  const UuidRow = ({ version, uuid, name, namespaceName, customNamespace, onNameChange, onNamespaceChange, onCustomNamespaceChange, description, useLegacy, onLegacyChange, isCustomNamespaceValid }) => {
+  const UuidRow = ({ version, uuid, name, namespaceName, customNamespace, onNameChange, onNamespaceChange, onCustomNamespaceChange, description, useLegacy, onLegacyChange, isCustomNamespaceValid, onRegenerate }) => {
     const [showEncodings, setShowEncodings] = useState(false);
     const shortForm = uuid ? (useLegacy ? shortUUID.legacyEncode(uuid) : shortUUID.encode(uuid)) : '';
     const hexForm = uuid ? uuidToHex(uuid) : '';
@@ -298,7 +298,18 @@ const UuidTool = () => {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             UUID v{version}
           </h3>
-          <span className="text-xs text-gray-500 dark:text-gray-400">{description}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-500 dark:text-gray-400">{description}</span>
+            {onRegenerate && (
+              <button
+                onClick={onRegenerate}
+                className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors"
+                title="Regenerate this UUID"
+              >
+                ↻
+              </button>
+            )}
+          </div>
         </div>
 
         {name !== undefined && (
@@ -635,6 +646,7 @@ const UuidTool = () => {
               description="Timestamp-based"
               useLegacy={uuid1UseLegacy}
               onLegacyChange={setUuid1UseLegacy}
+              onRegenerate={() => setUuid1(generateUUIDv1())}
             />
             
             <UuidRow
@@ -658,6 +670,7 @@ const UuidTool = () => {
               description="Random"
               useLegacy={uuid4UseLegacy}
               onLegacyChange={setUuid4UseLegacy}
+              onRegenerate={() => setUuid4(generateUUIDv4())}
             />
             
             <UuidRow
@@ -681,6 +694,7 @@ const UuidTool = () => {
               description="Timestamp-ordered (reordered v1)"
               useLegacy={uuid6UseLegacy}
               onLegacyChange={setUuid6UseLegacy}
+              onRegenerate={() => setUuid6(generateUUIDv6())}
             />
             
             <UuidRow
@@ -689,6 +703,7 @@ const UuidTool = () => {
               description="Timestamp-ordered"
               useLegacy={uuid7UseLegacy}
               onLegacyChange={setUuid7UseLegacy}
+              onRegenerate={() => setUuid7(generateUUIDv7())}
             />
           </div>
 

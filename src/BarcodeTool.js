@@ -78,9 +78,29 @@ const BarcodeTool = () => {
   const [error, setError] = useState('');
   const [imgUrl, setImgUrl] = useState('');
   const [inverted, setInverted] = useState(false);
+  const [outputFormat, setOutputFormat] = useState('svg');
+  const [pngScale, setPngScale] = useState(1);
   const canvasRef = useRef(null);
+  const svgRef = useRef(null);
   const debounceRef = useRef(null);
   const [paramDecoded, setParamDecoded] = useState(false);
+
+  // Load outputFormat preference from localStorage
+  useEffect(() => {
+    try {
+      const savedFormat = localStorage.getItem('barcode_output_format');
+      if (savedFormat === 'png' || savedFormat === 'svg') {
+        setOutputFormat(savedFormat);
+      }
+      const savedScale = localStorage.getItem('barcode_png_scale');
+      if (savedScale) {
+        const scale = Number(savedScale);
+        if (scale >= 1 && scale <= 5) {
+          setPngScale(scale);
+        }
+      }
+    } catch {}
+  }, []);
 
   // Fallback priority (runs once after potential param decode): history > example
   useEffect(() => {
@@ -111,48 +131,96 @@ const BarcodeTool = () => {
 
   // URL syncing handled via Base64QuerySync component below.
 
-  // Render barcode to canvas and capture PNG data URL
+  // Render barcode to canvas/SVG and capture data URL
   const renderBarcode = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
     try {
-      // Always ensure a solid white background
-      const ctx = canvas.getContext('2d');
-      ctx.save();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.restore();
+      if (outputFormat === 'svg') {
+        const svg = bwipjs.toSVG({
+          bcid: type,
+          text: text,
+          scale: 3,
+          height: 12,
+          includetext: true,
+          textxalign: 'center',
+        });
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        setImgUrl(url);
+        if (svgRef.current) svgRef.current = svg;
+      } else {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        // Always ensure a solid white background
+        const ctx = canvas.getContext('2d');
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
 
-      bwipjs.toCanvas(canvas, {
-        bcid: type,
-        text: text,
-        scale: 3,
-        height: 12,
-        includetext: true,
-        textxalign: 'center',
-      });
+        bwipjs.toCanvas(canvas, {
+          bcid: type,
+          text: text,
+          scale: 3,
+          height: 12,
+          includetext: true,
+          textxalign: 'center',
+        });
 
-      const url = canvas.toDataURL('image/png');
-      setImgUrl(url);
+        // If scale > 1, create a scaled version with sharp edges
+        if (pngScale > 1) {
+          const scaledCanvas = document.createElement('canvas');
+          scaledCanvas.width = canvas.width * pngScale;
+          scaledCanvas.height = canvas.height * pngScale;
+          const scaledCtx = scaledCanvas.getContext('2d');
+          
+          // Disable image smoothing for sharp pixel scaling
+          scaledCtx.imageSmoothingEnabled = false;
+          scaledCtx.webkitImageSmoothingEnabled = false;
+          scaledCtx.mozImageSmoothingEnabled = false;
+          scaledCtx.msImageSmoothingEnabled = false;
+          
+          scaledCtx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+          const url = scaledCanvas.toDataURL('image/png');
+          setImgUrl(url);
+        } else {
+          const url = canvas.toDataURL('image/png');
+          setImgUrl(url);
+        }
+      }
       setError('');
     } catch (e) {
       setError(e.message || 'Failed to render');
     }
   };
 
+  // Save outputFormat preference to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('barcode_output_format', outputFormat);
+    } catch {}
+  }, [outputFormat]);
+
+  // Save pngScale preference to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('barcode_png_scale', String(pngScale));
+    } catch {}
+  }, [pngScale]);
+
   // Debounce rendering
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => { renderBarcode(); }, 250);
     return () => debounceRef.current && clearTimeout(debounceRef.current);
-  }, [text, type]);
+  }, [text, type, outputFormat, pngScale]);
 
   const handleDownload = () => {
     if (!imgUrl) return;
     const a = document.createElement('a');
     a.href = imgUrl;
-    a.download = `${type}-${text}.png`;
+    const ext = outputFormat === 'svg' ? 'svg' : 'png';
+    a.download = `${type}-${text}.${ext}`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -245,8 +313,56 @@ const BarcodeTool = () => {
                 </select>
               </div>
             </div>
+            <div>
+              <label className="text-xs font-bold text-gray-600 dark:text-gray-400">Output Format</label>
+              <div className="mt-1 flex gap-2">
+                <button
+                  onClick={() => setOutputFormat('png')}
+                  className={`flex-1 px-3 py-2 text-xs rounded border transition ${
+                    outputFormat === 'png'
+                      ? 'bg-jwtBlue text-white border-jwtBlue'
+                      : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  PNG
+                </button>
+                <button
+                  onClick={() => setOutputFormat('svg')}
+                  className={`flex-1 px-3 py-2 text-xs rounded border transition ${
+                    outputFormat === 'svg'
+                      ? 'bg-jwtBlue text-white border-jwtBlue'
+                      : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  SVG
+                </button>
+              </div>
+            </div>
+            {outputFormat === 'png' && (
+              <div>
+                <label className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                  PNG Scale: {pngScale}x
+                </label>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  step="1"
+                  value={pngScale}
+                  onChange={(e) => setPngScale(Number(e.target.value))}
+                  className="mt-1 w-full"
+                />
+                <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 mt-1">
+                  <span>1x</span>
+                  <span>2x</span>
+                  <span>3x</span>
+                  <span>4x</span>
+                  <span>5x</span>
+                </div>
+              </div>
+            )}
             <div className="flex gap-2 flex-wrap text-xs">
-              <button onClick={handleDownload} className="px-3 py-1 rounded bg-jwtBlue text-white font-semibold hover:opacity-90">Download PNG</button>
+              <button onClick={handleDownload} className="px-3 py-1 rounded bg-jwtBlue text-white font-semibold hover:opacity-90">Download {outputFormat.toUpperCase()}</button>
               <button onClick={handleCopyImage} className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:opacity-90">Copy Image</button>
               <button onClick={handleShare} className="px-3 py-1 rounded bg-jwtPurple text-white font-semibold hover:opacity-90">Share Link</button>
               <button onClick={()=>setInverted(v=>!v)} className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:opacity-90">{inverted ? 'Normal Colors' : 'Invert Colors'}</button>
@@ -256,7 +372,7 @@ const BarcodeTool = () => {
 
           {/* Preview */}
           <div className="flex flex-col bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-4">
-            <div className="text-xs font-bold mb-2 text-gray-500 dark:text-gray-400">Barcode PNG</div>
+            <div className="text-xs font-bold mb-2 text-gray-500 dark:text-gray-400">Barcode Preview ({outputFormat.toUpperCase()})</div>
             <div className={`flex items-center justify-center min-h-[220px] p-4 border-2 border-gray-400 dark:border-gray-500 rounded ${inverted ? 'bg-black' : 'bg-white'}`}>
               {imgUrl ? (
                 <img src={imgUrl} alt="barcode" className={`max-w-full max-h-[360px] object-contain ${inverted ? 'invert' : ''}`} />

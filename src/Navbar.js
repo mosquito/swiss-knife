@@ -11,6 +11,7 @@ const tools = [
   { id: 'crypto', label: '🛡️ Crypto Utils' },
   { id: 'password', label: '🔑 Password' },
   { id: 'uuid', label: '🆔 UUID' },
+  { id: 'wifiqr', label: '📶 WiFi QR' },
 ];
 
 const Navbar = ({ activeTool, onSelect }) => (

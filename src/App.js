@@ -12,6 +12,7 @@ import DisclaimerFooter from './DisclaimerFooter';
 import CryptoTool from './CryptoTool';
 import PasswordTool from './PasswordTool';
 import UuidTool from './UuidTool';
+import WifiQRTool from './WifiQRTool';
 import GithubCorner from './GithubCorner';
 
 const App = () => {
@@ -19,7 +20,7 @@ const App = () => {
 
   // Sync tool selection with location.hash and listen for external hash changes
   useEffect(() => {
-    const allowed = ['jwt','hash','encode','barcode','ipcalc','datetime','format','crypto','password','uuid','text'];
+    const allowed = ['jwt','hash','encode','barcode','ipcalc','datetime','format','crypto','password','uuid','wifiqr','text'];
     const applyFromHash = () => {
       const raw = window.location.hash.replace(/^#/,'').trim();
       if (allowed.includes(raw)) setActiveTool(raw);
@@ -50,6 +51,7 @@ const App = () => {
       {activeTool === 'crypto' && <CryptoTool />}
       {activeTool === 'password' && <PasswordTool />}
       {activeTool === 'uuid' && <UuidTool />}
+      {activeTool === 'wifiqr' && <WifiQRTool />}
       {/* Future tools mount based on activeTool */}
       <DisclaimerFooter />
     </div>
