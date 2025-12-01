@@ -135,17 +135,76 @@ export const extractPublicFromPrivateAsync = async (privateKeyPem) => {
     }
 };
 
-// --- Encoding/Decoding Logic (Unchanged) ---
+// --- Encoding/Decoding Logic with Lazy Evaluation ---
 export const decodeJWT = (token) => {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) throw new Error("Invalid Token Format");
-    const header = JSON.parse(atob(parts[0]));
-    const payload = JSON.parse(atob(parts[1]));
-    return { header, payload, valid: true };
-  } catch (e) {
-    return { header: {}, payload: {}, valid: false };
+  // Default result structure
+  const result = {
+    header: {},
+    payload: {},
+    valid: false,
+    headerError: null,
+    payloadError: null,
+    formatError: null
+  };
+
+  if (!token || typeof token !== 'string' || token.trim() === '') {
+    result.formatError = 'Empty token';
+    return result;
   }
+
+  // Split by dots - always try to extract parts
+  const parts = token.split('.');
+  
+  // Check format but don't fail completely
+  if (parts.length !== 3) {
+    result.formatError = `Expected 3 parts (header.payload.signature), found ${parts.length}`;
+  }
+
+  // Try to decode header (part 0) if exists
+  if (parts[0]) {
+    try {
+      const decoded = atob(parts[0].replace(/-/g, '+').replace(/_/g, '/'));
+      result.header = JSON.parse(decoded);
+    } catch (e) {
+      // Try to at least show the raw base64 attempt
+      try {
+        const decoded = atob(parts[0].replace(/-/g, '+').replace(/_/g, '/'));
+        result.headerError = 'JSON parse failed';
+        result.headerRaw = decoded;
+        result.header = {};
+      } catch {
+        result.headerError = 'Base64 decode failed';
+        result.header = {};
+      }
+    }
+  }
+
+  // Try to decode payload (part 1) if exists
+  if (parts[1]) {
+    try {
+      const decoded = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+      result.payload = JSON.parse(decoded);
+    } catch (e) {
+      // Try to at least show the raw base64 attempt
+      try {
+        const decoded = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+        result.payloadError = 'JSON parse failed';
+        result.payloadRaw = decoded;
+        result.payload = {};
+      } catch {
+        result.payloadError = 'Base64 decode failed';
+        result.payload = {};
+      }
+    }
+  }
+
+  // Token is valid only if we have all 3 parts and both header and payload decoded successfully
+  result.valid = parts.length === 3 && 
+                 !result.headerError && 
+                 !result.payloadError && 
+                 !result.formatError;
+
+  return result;
 };
 
 export const verifyJWT = (token, secretOrPublicKey, alg) => {

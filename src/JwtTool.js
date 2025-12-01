@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { decodeJWT, signJWT, verifyJWT, generateKeysAsync, isPrivateKey, extractPublicFromPrivateAsync } from './utils';
+import HistoryList from './HistoryList';
 
 const CopyIcon = () => (
   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
@@ -21,6 +22,15 @@ const JwtTool = () => {
   const [derivedPublicKey, setDerivedPublicKey] = useState('');
   const [isGenerating, setIsGenerating] = useState(true);
   const [isCopied, setIsCopied] = useState(false);
+  const [copiedToken, setCopiedToken] = useState(false);
+  const [copiedHeader, setCopiedHeader] = useState(false);
+  const [copiedPayload, setCopiedPayload] = useState(false);
+  const [headerText, setHeaderText] = useState(JSON.stringify(DEFAULT_HEADER, null, 2));
+  const [payloadText, setPayloadText] = useState(JSON.stringify(DEFAULT_PAYLOAD, null, 2));
+  const [decodeResult, setDecodeResult] = useState({ headerError: null, payloadError: null, headerRaw: null, payloadRaw: null });
+  const [tokenUpdating, setTokenUpdating] = useState(false);
+  const [showPayloadHistory, setShowPayloadHistory] = useState(false);
+  const [payloadForHistory, setPayloadForHistory] = useState(null);
   const isUpdatingJson = useRef(false);
   const isUpdatingToken = useRef(false);
   const currentAlg = header.alg || 'HS256';
@@ -43,11 +53,48 @@ const JwtTool = () => {
     try { await navigator.clipboard.writeText(derivedPublicKey); setIsCopied(true); setTimeout(()=>setIsCopied(false),2000); } catch { /* ignore copy errors */ }
   };
 
+  const handleCopyToken = async () => {
+    try { await navigator.clipboard.writeText(token); setCopiedToken(true); setTimeout(()=>setCopiedToken(false),2000); } catch { /* ignore copy errors */ }
+  };
+
+  const handleCopyHeader = async () => {
+    try { await navigator.clipboard.writeText(JSON.stringify(header, null, 2)); setCopiedHeader(true); setTimeout(()=>setCopiedHeader(false),2000); } catch { /* ignore copy errors */ }
+  };
+
+  const handleCopyPayload = async () => {
+    try { await navigator.clipboard.writeText(JSON.stringify(payload, null, 2)); setCopiedPayload(true); setTimeout(()=>setCopiedPayload(false),2000); } catch { /* ignore copy errors */ }
+  };
+
   useEffect(() => {
     const init = async () => {
       const alg = header.alg || 'HS256';
       const key = await applyNewKeys(alg);
-      const initialToken = signJWT(DEFAULT_HEADER, DEFAULT_PAYLOAD, key);
+      
+      // Try to load last payload from history
+      let initialPayload = DEFAULT_PAYLOAD;
+      try {
+        const historyRaw = localStorage.getItem('jwt-payload-history');
+        if (historyRaw) {
+          const historyArray = JSON.parse(historyRaw);
+          if (Array.isArray(historyArray) && historyArray.length > 0) {
+            // Use the most recent payload (first item)
+            initialPayload = historyArray[0].value;
+            setPayload(initialPayload);
+            setPayloadText(JSON.stringify(initialPayload, null, 2));
+          } else {
+            // History is empty, add default payload
+            setPayloadForHistory(DEFAULT_PAYLOAD);
+          }
+        } else {
+          // No history exists, add default payload
+          setPayloadForHistory(DEFAULT_PAYLOAD);
+        }
+      } catch {
+        // On error, use default and save it
+        setPayloadForHistory(DEFAULT_PAYLOAD);
+      }
+      
+      const initialToken = signJWT(DEFAULT_HEADER, initialPayload, key);
       if(initialToken) setToken(initialToken);
       setIsVerified(true);
     };
@@ -57,10 +104,15 @@ const JwtTool = () => {
   const handleAlgChange = async (newAlg) => {
     const newHeader = { ...header, alg: newAlg };
     setHeader(newHeader);
+    setHeaderText(JSON.stringify(newHeader, null, 2));
     isUpdatingJson.current = true;
     const newKey = await applyNewKeys(newAlg);
     const newToken = signJWT(newHeader, payload, newKey);
-    if(newToken) setToken(newToken);
+    if(newToken) {
+      setToken(newToken);
+      setTokenUpdating(true);
+      setTimeout(() => setTokenUpdating(false), 300);
+    }
     isUpdatingJson.current = false;
     setIsVerified(true);
   };
@@ -80,33 +132,117 @@ const JwtTool = () => {
     if(isUpdatingJson.current) return;
     isUpdatingToken.current = true;
     const result = decodeJWT(val);
-    if(result.valid){
-      setHeader(result.header);
-      setPayload(result.payload);
-      setIsVerified(verifyJWT(val, keyInput, result.header.alg || 'HS256'));
+    
+    // Store decode result for error/raw display
+    setDecodeResult({
+      headerError: result.headerError,
+      payloadError: result.payloadError,
+      headerRaw: result.headerRaw,
+      payloadRaw: result.payloadRaw
+    });
+    
+    // Always update header and payload, even if partially decoded
+    setHeader(result.header || {});
+    setPayload(result.payload || {});
+    
+    // Update text - show raw if available, otherwise reformat valid JSON
+    if(result.headerRaw) {
+      setHeaderText(result.headerRaw);
+    } else {
+      setHeaderText(JSON.stringify(result.header || {}, null, 2));
     }
+    
+    if(result.payloadRaw) {
+      setPayloadText(result.payloadRaw);
+    } else {
+      setPayloadText(JSON.stringify(result.payload || {}, null, 2));
+    }
+    
+    // Verify signature only if token structure is valid
+    if(result.valid){
+      setIsVerified(verifyJWT(val, keyInput, result.header.alg || 'HS256'));
+    } else {
+      setIsVerified(false);
+    }
+    
     isUpdatingToken.current = false;
   };
 
-  const handleJsonChange = (type, val) => {
+  const handleJsonTextChange = (type, val) => {
     if(!isEditable) return;
+    if(type === 'header') setHeaderText(val);
+    else setPayloadText(val);
+  };
+
+  const handleJsonBlur = (type) => {
+    if(!isEditable) return;
+    const val = type === 'header' ? headerText : payloadText;
     try {
       const obj = JSON.parse(val);
-      if(type==='header') setHeader(obj); else setPayload(obj);
+      
+      if(type==='header') {
+        setHeader(obj);
+        // Reformat the JSON
+        setHeaderText(JSON.stringify(obj, null, 2));
+        // Clear header error on successful parse
+        setDecodeResult(prev => ({ ...prev, headerError: null, headerRaw: null }));
+      } else {
+        setPayload(obj);
+        // Reformat the JSON
+        setPayloadText(JSON.stringify(obj, null, 2));
+        // Clear payload error on successful parse
+        setDecodeResult(prev => ({ ...prev, payloadError: null, payloadRaw: null }));
+        // Save to history
+        setPayloadForHistory(obj);
+      }
+      
       if(isUpdatingToken.current) return;
       isUpdatingJson.current = true;
       const currentHeader = type==='header'? obj : header;
       const currentPayload = type==='payload'? obj : payload;
       const newToken = signJWT(currentHeader, currentPayload, keyInput);
-      if(newToken){ setToken(newToken); setIsVerified(true); }
+      if(newToken){ 
+        setToken(newToken); 
+        setIsVerified(true);
+        // Trigger animation
+        setTokenUpdating(true);
+        setTimeout(() => setTokenUpdating(false), 300);
+      }
       isUpdatingJson.current = false;
-    } catch(e){}
+    } catch(e){
+      // Invalid JSON - revert to last valid state and reformat
+      if(type === 'header') setHeaderText(JSON.stringify(header, null, 2));
+      else setPayloadText(JSON.stringify(payload, null, 2));
+    }
+  };
+
+  const handleRestorePayload = (restoredPayload) => {
+    setPayload(restoredPayload);
+    setPayloadText(JSON.stringify(restoredPayload, null, 2));
+    setDecodeResult(prev => ({ ...prev, payloadError: null, payloadRaw: null }));
+    setShowPayloadHistory(false);
+    
+    if(isUpdatingToken.current) return;
+    isUpdatingJson.current = true;
+    const newToken = signJWT(header, restoredPayload, keyInput);
+    if(newToken){ 
+      setToken(newToken); 
+      setIsVerified(true);
+      setTokenUpdating(true);
+      setTimeout(() => setTokenUpdating(false), 300);
+    }
+    isUpdatingJson.current = false;
   };
 
   useEffect(() => {
     if(!isUpdatingToken.current && token && !isGenerating){
       const newToken = signJWT(header, payload, keyInput);
-      if(newToken){ setToken(newToken); setIsVerified(true); }
+      if(newToken){ 
+        setToken(newToken); 
+        setIsVerified(true);
+        setTokenUpdating(true);
+        setTimeout(() => setTokenUpdating(false), 300);
+      }
       else { setIsVerified(verifyJWT(token, keyInput, currentAlg)); }
     }
   }, [keyInput]);
@@ -123,8 +259,14 @@ const JwtTool = () => {
       )}
       <div className="w-full md:w-1/2 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
         <div className="p-6 flex flex-col h-full">
-          <h2 className="text-lg font-bold mb-4 shrink-0">Encoded</h2>
-          <textarea className="flex-1 w-full p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner text-gray-600 dark:text-gray-300 break-all focus:ring-2 focus:ring-jwtRed focus:border-transparent resize-none font-mono text-base" value={token} onChange={(e)=>handleTokenChange(e.target.value)} placeholder="Token will appear here..." spellCheck="false" />
+          <div className="flex justify-between items-center mb-4 shrink-0">
+            <h2 className="text-lg font-bold">Encoded</h2>
+            <button onClick={handleCopyToken} disabled={!token} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-[10px] font-bold disabled:opacity-50 disabled:cursor-not-allowed" title="Copy Token">
+              {copiedToken ? <CheckIcon/> : <CopyIcon/>}
+              <span>{copiedToken ? 'Copied' : 'Copy'}</span>
+            </button>
+          </div>
+          <textarea className={`flex-1 w-full p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner text-gray-600 dark:text-gray-300 break-all focus:ring-2 focus:ring-jwtRed focus:border-transparent resize-none font-mono text-base transition-all ${tokenUpdating ? 'ring-2 ring-jwtRed scale-[1.01]' : ''}`} value={token} onChange={(e)=>handleTokenChange(e.target.value)} placeholder="Token will appear here..." spellCheck="false" />
           <div className={`mt-4 p-3 text-center font-bold rounded ${isVerified ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{isVerified ? 'Signature Verified' : 'Invalid Signature'}</div>
         </div>
       </div>
@@ -142,12 +284,44 @@ const JwtTool = () => {
             </div>
           </div>
           <div className="mb-6">
-            <div className="flex justify-between mb-1"><div className="text-xs text-gray-500 font-bold">HEADER:</div>{!isEditable && <span className="text-[10px] text-gray-400 font-bold uppercase">Read Only</span>}</div>
-            <textarea readOnly={!isEditable} className={`w-full h-24 bg-white dark:bg-gray-800 border-l-4 border-jwtRed rounded shadow-sm text-jwtRed font-mono text-sm resize-none ${!isEditable ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`} value={JSON.stringify(header,null,2)} onChange={(e)=>handleJsonChange('header', e.target.value)} spellCheck="false" />
+            <div className="flex justify-between items-center mb-1">
+              <div className="text-xs text-gray-500 font-bold">HEADER:</div>
+              <div className="flex items-center gap-2">
+                <button onClick={handleCopyHeader} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-[10px] font-bold" title="Copy Header">
+                  {copiedHeader ? <CheckIcon/> : <CopyIcon/>}
+                  <span>{copiedHeader ? 'Copied' : 'Copy'}</span>
+                </button>
+                {!isEditable && <span className="text-[10px] text-gray-400 font-bold uppercase">Read Only</span>}
+              </div>
+            </div>
+            <textarea readOnly={!isEditable} className={`w-full h-24 bg-white dark:bg-gray-800 border-l-4 border-jwtRed rounded shadow-sm text-jwtRed font-mono text-sm resize-none ${!isEditable ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`} value={headerText} onChange={(e)=>handleJsonTextChange('header', e.target.value)} onBlur={()=>handleJsonBlur('header')} spellCheck="false" />
+            {decodeResult.headerError && (
+              <div className="mt-1 text-xs text-red-600 dark:text-red-400 font-bold">
+                ⚠ {decodeResult.headerError}
+              </div>
+            )}
           </div>
           <div className="mb-6">
-            <div className="flex justify-between mb-1"><div className="text-xs text-gray-500 font-bold">PAYLOAD:</div>{!isEditable && <span className="text-[10px] text-gray-400 font-bold uppercase">Read Only</span>}</div>
-            <textarea readOnly={!isEditable} className={`w-full h-48 bg-white dark:bg-gray-800 border-l-4 border-jwtPurple rounded shadow-sm text-jwtPurple font-mono text-sm resize-none ${!isEditable ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`} value={JSON.stringify(payload,null,2)} onChange={(e)=>handleJsonChange('payload', e.target.value)} spellCheck="false" />
+            <div className="flex justify-between items-center mb-1">
+              <div className="text-xs text-gray-500 font-bold">PAYLOAD:</div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setShowPayloadHistory(true)} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-[10px] font-bold" title="View History">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span>History</span>
+                </button>
+                <button onClick={handleCopyPayload} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-[10px] font-bold" title="Copy Payload">
+                  {copiedPayload ? <CheckIcon/> : <CopyIcon/>}
+                  <span>{copiedPayload ? 'Copied' : 'Copy'}</span>
+                </button>
+                {!isEditable && <span className="text-[10px] text-gray-400 font-bold uppercase">Read Only</span>}
+              </div>
+            </div>
+            <textarea readOnly={!isEditable} className={`w-full h-48 bg-white dark:bg-gray-800 border-l-4 border-jwtPurple rounded shadow-sm text-jwtPurple font-mono text-sm resize-none ${!isEditable ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`} value={payloadText} onChange={(e)=>handleJsonTextChange('payload', e.target.value)} onBlur={()=>handleJsonBlur('payload')} spellCheck="false" />
+            {decodeResult.payloadError && (
+              <div className="mt-1 text-xs text-red-600 dark:text-red-400 font-bold">
+                ⚠ {decodeResult.payloadError}
+              </div>
+            )}
           </div>
           <div className="mb-6">
             <div className="flex justify-between items-end mb-1"><div className="text-xs text-gray-500 font-bold">VERIFY SIGNATURE</div><button disabled={isGenerating} onClick={async()=>{ const k = await applyNewKeys(currentAlg); const t = signJWT(header,payload,k); if(t) setToken(t); }} className="text-[10px] bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50">Generate New Keys</button></div>
@@ -168,6 +342,35 @@ const JwtTool = () => {
           </div>
         </div>
       </div>
+      {showPayloadHistory && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center backdrop-blur-sm" onClick={() => setShowPayloadHistory(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-bold">Payload History</h3>
+              <button onClick={() => setShowPayloadHistory(false)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[calc(80vh-80px)] custom-scrollbar">
+              <HistoryList
+                storageKey="jwt-payload-history"
+                title="Recent Payloads"
+                newItem={payloadForHistory}
+                max={20}
+                dedupeKey={(item) => JSON.stringify(item)}
+                renderLabel={(item) => (
+                  <span className="font-mono text-xs text-gray-700 dark:text-gray-300">
+                    {JSON.stringify(item).length > 100 
+                      ? JSON.stringify(item).substring(0, 100) + '...' 
+                      : JSON.stringify(item)}
+                  </span>
+                )}
+                onRestore={handleRestorePayload}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
