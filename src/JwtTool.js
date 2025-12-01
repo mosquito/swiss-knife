@@ -132,6 +132,16 @@ const JwtTool = () => {
         <div className="p-6">
           <h2 className="text-lg font-bold mb-4">Decoded</h2>
           <div className="mb-6">
+            <div className="text-xs text-gray-500 font-bold mb-2">ALGORITHM:</div>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {ALGORITHMS.map(alg => (
+                <button key={alg} onClick={() => handleAlgChange(alg)} disabled={isGenerating} className={`px-3 py-1.5 text-xs font-bold rounded transition-colors ${currentAlg === alg ? 'bg-jwtRed text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 dark:border-gray-600`}>
+                  {alg}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mb-6">
             <div className="flex justify-between mb-1"><div className="text-xs text-gray-500 font-bold">HEADER:</div>{!isEditable && <span className="text-[10px] text-gray-400 font-bold uppercase">Read Only</span>}</div>
             <textarea readOnly={!isEditable} className={`w-full h-24 bg-white dark:bg-gray-800 border-l-4 border-jwtRed rounded shadow-sm text-jwtRed font-mono text-sm resize-none ${!isEditable ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`} value={JSON.stringify(header,null,2)} onChange={(e)=>handleJsonChange('header', e.target.value)} spellCheck="false" />
           </div>
