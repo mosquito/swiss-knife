@@ -36,6 +36,7 @@ module.exports = {
       template: './public/index.html',
       filename: 'index.html',
       inject: 'body',
+      csp: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; frame-src 'none'; object-src 'none';",
       minify: {
         collapseWhitespace: true,
         removeComments: true,

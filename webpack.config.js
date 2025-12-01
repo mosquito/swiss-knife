@@ -34,7 +34,10 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './public/index.html',
       filename: 'index.html',
-      inject: 'body'
+      inject: 'body',
+      csp: process.env.NODE_ENV === 'production' 
+        ? "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; frame-src 'none'; object-src 'none';"
+        : false
     })
   ],
   devServer: {

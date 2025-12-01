@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <% if (htmlWebpackPlugin.options.csp) { %>
+    <meta http-equiv="Content-Security-Policy" content="<%= htmlWebpackPlugin.options.csp %>">
+    <% } %>
     <title>Browser Toolkit</title>
 </head>
 <body>
     <div id="root"></div>
-    <script src="bundle.js"></script>
 </body>
 </html>

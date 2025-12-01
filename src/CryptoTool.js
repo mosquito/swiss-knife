@@ -44,6 +44,7 @@ const CryptoTool = () => {
   const [aesOutput, setAesOutput] = useState('');
   const [aesError, setAesError] = useState('');
   const [showKeys, setShowKeys] = useState(false);
+  const rsaMessageRef = React.useRef(rsaMessage);
 
   const verifySignature = async () => {
     setRsaError(''); setRsaResult('');
@@ -53,9 +54,13 @@ const CryptoTool = () => {
       const pubKey = await crypto.subtle.importKey('spki', keyBuf, algo, false, ['verify']);
       const sigBytes = b64decode(rsaSignature.trim());
       const dataBytes = textEncoder.encode(rsaMessage);
-      const valid = await crypto.subtle.verify(algo.name === 'RSA-PSS' ? { name:'RSA-PSS', saltLength:32 } : algo, pubKey, sigBytes, dataBytes);
+      const verifyParams = algo.name === 'RSA-PSS' ? { name:'RSA-PSS', saltLength:32 } : algo.name;
+      const valid = await crypto.subtle.verify(verifyParams, pubKey, sigBytes, dataBytes);
       setRsaResult(valid ? 'Signature VALID' : 'Signature INVALID');
-    } catch (e) { setRsaError(e.message || 'Verification failed'); }
+    } catch (e) { 
+      console.error('Verify error:', e);
+      setRsaError(e.message || 'Verification failed'); 
+    }
   };
 
   const signMessage = async () => {
@@ -66,11 +71,15 @@ const CryptoTool = () => {
       const privBuf = pemToArrayBuffer(rsaPrivate);
       const privateKey = await crypto.subtle.importKey('pkcs8', privBuf, algo, false, ['sign']);
       const dataBytes = textEncoder.encode(rsaMessage);
-      const sigBuf = await crypto.subtle.sign(algo.name === 'RSA-PSS' ? { name:'RSA-PSS', saltLength:32 } : algo, privateKey, dataBytes);
+      const signParams = algo.name === 'RSA-PSS' ? { name:'RSA-PSS', saltLength:32 } : algo.name;
+      const sigBuf = await crypto.subtle.sign(signParams, privateKey, dataBytes);
       const sigBytes = new Uint8Array(sigBuf);
       setRsaSignature(b64encode(sigBytes));
       setRsaResult('Signature GENERATED');
-    } catch (e) { setRsaError(e.message || 'Signing failed'); }
+    } catch (e) { 
+      console.error('Sign error:', e);
+      setRsaError(e.message || 'Signing failed'); 
+    }
   };
 
   const generateKeyPair = async () => {
@@ -121,6 +130,30 @@ const CryptoTool = () => {
     return () => clearTimeout(t);
   }, [rsaPrivate]);
 
+  // Auto-sign after 1s delay when message changes
+  useEffect(() => {
+    if (rsaMessageRef.current !== rsaMessage) {
+      setRsaSignature('');
+      setRsaResult('');
+      setRsaError('');
+    }
+    rsaMessageRef.current = rsaMessage;
+    
+    if (!rsaMessage) return;
+    
+    // Generate key if not present
+    if (!rsaPrivate || !isPrivateKey(rsaPrivate)) {
+      generateKeyPair();
+      return;
+    }
+    
+    const timer = setTimeout(() => {
+      signMessage();
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [rsaMessage, rsaPrivate]);
+
   const runAes = async () => {
     setAesError(''); setAesOutput('');
     try {
@@ -154,9 +187,14 @@ const CryptoTool = () => {
       <div className="flex-1 overflow-auto p-6 custom-scrollbar">
         <div className="max-w-4xl mx-auto space-y-6">
           <h2 className="text-xl font-bold">Crypto Utils</h2>
-          <p className="text-xs text-gray-600 dark:text-gray-400">Client-side RSA key generation, public key extraction, signature verification, and AES-GCM encryption/decryption. Educational use only; do not rely for production-grade security.</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">
+            Client-side cryptographic operations using Web Crypto API. All operations execute in-browser with no server transmission. Keys are ephemeral unless explicitly exported.
+          </p>
           <div className="space-y-3">
           <h3 className="text-sm font-semibold">RSA Sign</h3>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+            RSA digital signatures with RSASSA-PKCS1-v1_5 (RS256) and RSA-PSS (PS256) using SHA-256. Supports 2048-bit key generation, public key extraction from private keys, and signature verification.
+          </p>
           <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-sm divide-y divide-gray-200 dark:divide-gray-700">
             <button onClick={()=>setShowKeys(!showKeys)} className="w-full flex items-center justify-between px-3 py-2 text-[11px] font-bold bg-gray-50 dark:bg-gray-700">
               <span>Keys</span>
@@ -183,7 +221,7 @@ const CryptoTool = () => {
                     <option value="PS256">PS256</option>
                   </select>
                 </label>
-                {isPrivateKey(rsaPrivate) && <button onClick={signMessage} className="px-3 py-1 rounded bg-jwtGreen text-white font-semibold hover:opacity-90">Sign</button>}
+                {isPrivateKey(rsaPrivate) && <button onClick={signMessage} className="px-3 py-1 rounded bg-green-500 text-white font-semibold hover:opacity-90">Sign</button>}
                 <button onClick={verifySignature} className="px-3 py-1 rounded bg-jwtPurple text-white font-semibold hover:opacity-90">Verify</button>
                 <button onClick={()=>handleCopy(rsaSignature)} className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:opacity-90">Copy Sig</button>
                 {rsaError && <span className="px-2 py-1 rounded bg-red-100 text-red-600 font-semibold">Error</span>}
@@ -196,6 +234,9 @@ const CryptoTool = () => {
         </div>
         <div className="space-y-3">
           <h3 className="text-sm font-semibold">AES</h3>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+            AES-256-GCM authenticated encryption with PBKDF2-HMAC-SHA256 key derivation (100k iterations). Generates cryptographically secure random salts and IVs for each encryption.
+          </p>
           <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-sm p-3 space-y-3">
             <div className="flex flex-wrap gap-2 text-xs items-center">
               <label className="flex items-center gap-1">Mode:
@@ -213,7 +254,7 @@ const CryptoTool = () => {
             </div>
             <textarea value={aesInput} onChange={e=>setAesInput(e.target.value)} spellCheck="false" placeholder={aesMode==='encrypt'? 'Plaintext to encrypt' : 'salt:iv:cipher'} className="w-full h-28 p-2 font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded resize-none focus:outline-none" />
             <textarea value={aesOutput} readOnly spellCheck="false" placeholder={aesMode==='encrypt'? 'salt:iv:cipher output here' : 'Decrypted plaintext'} className="w-full h-28 p-2 font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded resize-none focus:outline-none" />
-            <div className="text-[10px] text-gray-500 dark:text-gray-400 font-mono">Format: base64(salt):base64(iv):base64(cipher). 100k PBKDF2 iterations. Educational only.</div>
+            <div className="text-[10px] text-gray-500 dark:text-gray-400 font-mono">Output format: base64(salt):base64(iv):base64(ciphertext)</div>
           </div>
         </div>
         </div>
