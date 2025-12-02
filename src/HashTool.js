@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import CryptoJS from 'crypto-js';
+import bcrypt from 'bcryptjs';
 import { blake2bHex, blake2sHex } from 'blakejs';
 import { encodeBase32, encodeBase64, encodeBase85, decodeHex } from './utils';
 
 // Full algorithm list we compute concurrently
-const algorithms = ['MD5','SHA-256','SHA-512','BLAKE2b','BLAKE2s'];
+const algorithms = ['MD5','SHA-256','SHA-512','BLAKE2b','BLAKE2s','bcrypt'];
 
 const HashTool = () => {
   const [input, setInput] = useState('');
@@ -22,19 +23,30 @@ const HashTool = () => {
       const nextResults = {};
       for (const alg of algorithms) {
         let hex = '';
-        switch (alg) {
-          case 'MD5': hex = CryptoJS.MD5(text).toString(CryptoJS.enc.Hex); break;
-          case 'SHA-256': hex = CryptoJS.SHA256(text).toString(CryptoJS.enc.Hex); break;
-          case 'SHA-512': hex = CryptoJS.SHA512(text).toString(CryptoJS.enc.Hex); break;
-          case 'BLAKE2b': hex = blake2bHex(text); break;
-          case 'BLAKE2s': hex = blake2sHex(text); break;
-          default: hex = ''; break;
+        let base64 = '';
+        let base32 = '';
+        let base85 = '';
+        
+        if (alg === 'bcrypt') {
+          // bcrypt produces a full hash string, not raw bytes
+          const salt = await bcrypt.genSalt(10);
+          const hash = await bcrypt.hash(text, salt);
+          nextResults[alg] = { hex: hash, base64: '(see hex)', base32: '(see hex)', base85: '(see hex)' };
+        } else {
+          switch (alg) {
+            case 'MD5': hex = CryptoJS.MD5(text).toString(CryptoJS.enc.Hex); break;
+            case 'SHA-256': hex = CryptoJS.SHA256(text).toString(CryptoJS.enc.Hex); break;
+            case 'SHA-512': hex = CryptoJS.SHA512(text).toString(CryptoJS.enc.Hex); break;
+            case 'BLAKE2b': hex = blake2bHex(text); break;
+            case 'BLAKE2s': hex = blake2sHex(text); break;
+            default: hex = ''; break;
+          }
+          const bytes = decodeHex(hex);
+          base64 = encodeBase64(bytes);
+          base32 = encodeBase32(bytes);
+          base85 = encodeBase85(bytes);
+          nextResults[alg] = { hex, base64, base32, base85 };
         }
-        const bytes = decodeHex(hex);
-        const base64 = encodeBase64(bytes);
-        const base32 = encodeBase32(bytes);
-        const base85 = encodeBase85(bytes);
-        nextResults[alg] = { hex, base64, base32, base85 };
         // Yield back to event loop to avoid blocking on large input
         // eslint-disable-next-line no-await-in-loop
         await new Promise(r => setTimeout(r, 0));

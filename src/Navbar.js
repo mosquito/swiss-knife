@@ -10,6 +10,7 @@ const tools = [
   { id: 'format', label: '🗃️ Data Format' },
   { id: 'crypto', label: '🛡️ Crypto Utils' },
   { id: 'password', label: '🔑 Password' },
+  { id: 'passwordhash', label: '🔐 PW Hash' },
   { id: 'uuid', label: '🆔 UUID' },
   { id: 'wifiqr', label: '📶 WiFi QR' },
   { id: 'bytes', label: '💾 Bytes' },

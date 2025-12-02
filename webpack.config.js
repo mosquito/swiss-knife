@@ -19,13 +19,25 @@ module.exports = {
         test: /\.css$/i,
         use: ['style-loader', 'css-loader', 'postcss-loader'],
       },
+      {
+        test: /\.wasm$/,
+        type: 'webassembly/async',
+      },
     ],
   },
   resolve: { 
     extensions: ['.js', '.jsx'],
     fallback: {
-      buffer: require.resolve('buffer/')
+      buffer: require.resolve('buffer/'),
+      crypto: require.resolve('crypto-browserify'),
+      stream: require.resolve('stream-browserify'),
+      vm: require.resolve('vm-browserify'),
+      path: false,
+      fs: false
     }
+  },
+  experiments: {
+    asyncWebAssembly: true,
   },
   plugins: [
     new webpack.ProvidePlugin({

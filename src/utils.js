@@ -44,6 +44,156 @@ export const decodeHex = (hex) => {
   return bytes;
 };
 
+// --- Crypt-style Base64 (for password hashing) ---
+export const CRYPT64_ALPHABET = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+export const encodeCrypt64 = (bytes) => {
+  let result = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const b1 = bytes[i];
+    const b2 = i + 1 < bytes.length ? bytes[i + 1] : 0;
+    const b3 = i + 2 < bytes.length ? bytes[i + 2] : 0;
+    const val = (b1 << 16) | (b2 << 8) | b3;
+    result += CRYPT64_ALPHABET[(val >> 18) & 0x3f];
+    result += CRYPT64_ALPHABET[(val >> 12) & 0x3f];
+    result += CRYPT64_ALPHABET[(val >> 6) & 0x3f];
+    result += CRYPT64_ALPHABET[val & 0x3f];
+  }
+  return result.substring(0, Math.ceil(bytes.length * 4 / 3));
+};
+
+export const generateSalt = (length = 16) => {
+  const bytes = crypto.getRandomValues(new Uint8Array(length));
+  return encodeCrypt64(bytes).substring(0, length);
+};
+
+export const generatePassword = (options = {}) => {
+  // Load config from localStorage if not explicitly provided
+  let config = { ...options };
+  if (!options.wordList) {
+    try {
+      const raw = localStorage.getItem('password_generator_toggles');
+      const stored = raw ? JSON.parse(raw) : {};
+      config = {
+        minWords: options.minWords ?? stored.minWords ?? 3,
+        maxWords: options.maxWords ?? stored.maxWords ?? 4,
+        useNumbers: options.useNumbers ?? stored.useNumbers ?? true,
+        useSymbols: options.useSymbols ?? stored.useSymbols ?? true,
+        useUpperCase: options.useUpperCase ?? stored.useUpperCase ?? true,
+        onlyLowerCase: options.onlyLowerCase ?? stored.onlyLowerCase ?? false,
+        urlSafe: options.urlSafe ?? stored.urlSafe ?? false,
+        minNumber: options.minNumber ?? stored.minNumber ?? 10,
+        maxNumber: options.maxNumber ?? stored.maxNumber ?? 9999,
+        separatorsInput: options.separatorsInput ?? stored.separatorsInput ?? '-_.,+@$',
+        useMixedSeparators: options.useMixedSeparators ?? stored.useMixedSeparators ?? false,
+        wordList: options.wordList
+      };
+    } catch {
+      // If localStorage fails, use defaults
+    }
+  }
+
+  const {
+    wordList,
+    minWords = 3,
+    maxWords = 4,
+    useNumbers = true,
+    useSymbols = true,
+    useUpperCase = true,
+    onlyLowerCase = false,
+    urlSafe = false,
+    minNumber = 10,
+    maxNumber = 9999,
+    separatorsInput = '-_.,+@$',
+    useMixedSeparators = false
+  } = config;
+
+  if (!wordList || wordList.length === 0) {
+    throw new Error('wordList is required for password generation');
+  }
+
+  const minW = Math.max(2, Math.min(10, minWords));
+  const maxW = Math.max(2, Math.min(10, Math.max(minW, maxWords)));
+  const numWords = minW + Math.floor(Math.random() * (maxW - minW + 1));
+  const words = [];
+  
+  const separators = [''];
+  for (let i = 0; i < separatorsInput.length; i++) {
+    const ch = separatorsInput[i];
+    if (!separators.includes(ch)) separators.push(ch);
+  }
+  
+  let chosenSeparators = [];
+  if (useMixedSeparators && numWords > 1) {
+    for (let i = 0; i < numWords - 1; i++) {
+      chosenSeparators.push(separators[Math.floor(Math.random() * separators.length)]);
+    }
+  } else {
+    const sep = separators[Math.floor(Math.random() * separators.length)];
+    for (let i = 0; i < numWords - 1; i++) {
+      chosenSeparators.push(sep);
+    }
+  }
+  
+  for (let i = 0; i < numWords; i++) {
+    let word = wordList[Math.floor(Math.random() * wordList.length)];
+    
+    const prevSepIsEmpty = i > 0 && chosenSeparators[i - 1] === '';
+    const shouldCapitalize = !onlyLowerCase && (
+      (useUpperCase && Math.random() > 0.5) || 
+      prevSepIsEmpty
+    );
+    
+    if (shouldCapitalize) {
+      word = word.charAt(0).toUpperCase() + word.slice(1);
+    }
+    
+    words.push(word);
+  }
+  
+  const separatorPositions = [];
+  let password = '';
+  if (useMixedSeparators && words.length > 0) {
+    password = words[0];
+    for (let i = 1; i < words.length; i++) {
+      const sepEach = chosenSeparators[i - 1];
+      separatorPositions.push({ index: password.length, sep: sepEach });
+      password += sepEach + words[i];
+    }
+  } else {
+    const sep = chosenSeparators.length > 0 ? chosenSeparators[0] : '';
+    password = words.join(sep);
+    if (sep && words.length > 1) {
+      let pos = words[0].length;
+      for (let i = 1; i < words.length; i++) {
+        separatorPositions.push({ index: pos, sep: sep });
+        pos += sep.length + words[i].length;
+      }
+    }
+  }
+  
+  if (useNumbers && separatorPositions.length > 0) {
+    const numMin = Math.max(0, minNumber);
+    const numMax = Math.max(numMin, maxNumber);
+    const randomNum = numMin + Math.floor(Math.random() * (numMax - numMin + 1));
+    const posToReplace = separatorPositions[Math.floor(Math.random() * separatorPositions.length)];
+    
+    const beforeSep = password.substring(0, posToReplace.index);
+    const afterSep = password.substring(posToReplace.index + posToReplace.sep.length);
+    password = beforeSep + randomNum + afterSep;
+  }
+  
+  if (useSymbols) {
+    const specialChars = urlSafe 
+      ? ['-', '_', '.', '~', '+'] 
+      : ['!', '@', '#', '$', '%', '&', '*', '+', '=', '?', '-', '_', '.', '~', '^'];
+    const specialChar = specialChars[Math.floor(Math.random() * specialChars.length)];
+    password += specialChar;
+  }
+  
+  return password;
+};
+
 // --- BigInt Base Encoding (for IP addresses) ---
 export const encodeBigIntToBase = (bigInt, alphabet) => {
   if (bigInt === 0n) return alphabet[0];

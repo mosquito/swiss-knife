@@ -11,6 +11,7 @@ import IPCalcTool from './IPCalcTool';
 import DisclaimerFooter from './DisclaimerFooter';
 import CryptoTool from './CryptoTool';
 import PasswordTool from './PasswordTool';
+import PasswordHashTool from './PasswordHashTool';
 import UuidTool from './UuidTool';
 import WifiQRTool from './WifiQRTool';
 import ByteConverterTool from './ByteConverterTool';
@@ -21,7 +22,7 @@ const App = () => {
 
   // Sync tool selection with location.hash and listen for external hash changes
   useEffect(() => {
-    const allowed = ['jwt','hash','encode','barcode','ipcalc','datetime','format','crypto','password','uuid','wifiqr','bytes','text'];
+    const allowed = ['jwt','hash','encode','barcode','ipcalc','datetime','format','crypto','password','passwordhash','uuid','wifiqr','bytes','text'];
     const applyFromHash = () => {
       const raw = window.location.hash.replace(/^#/,'').trim();
       if (allowed.includes(raw)) setActiveTool(raw);
@@ -51,6 +52,7 @@ const App = () => {
       {activeTool === 'format' && <DataFormatTool />}
       {activeTool === 'crypto' && <CryptoTool />}
       {activeTool === 'password' && <PasswordTool />}
+      {activeTool === 'passwordhash' && <PasswordHashTool />}
       {activeTool === 'uuid' && <UuidTool />}
       {activeTool === 'wifiqr' && <WifiQRTool />}
       {activeTool === 'bytes' && <ByteConverterTool />}

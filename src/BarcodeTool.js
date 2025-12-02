@@ -104,6 +104,7 @@ const BarcodeTool = () => {
   const svgRef = useRef(null);
   const debounceRef = useRef(null);
   const dropdownRef = useRef(null);
+  const historyAddRef = useRef(null);
   const [paramDecoded, setParamDecoded] = useState(false);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
 
@@ -195,6 +196,7 @@ const BarcodeTool = () => {
 
   // Render barcode to canvas/SVG and capture data URL
   const renderBarcode = () => {
+    let success = false;
     try {
       // Get the height and width for the current barcode type
       const symConfig = SYMS.find(s => s.value === type);
@@ -208,8 +210,7 @@ const BarcodeTool = () => {
         height: barcodeHeight,
         includetext: true,
         textxalign: 'center',
-      };
-      
+      };  
       // Add width for 2D codes to maintain aspect ratio
       if (barcodeWidth) {
         options.width = barcodeWidth;
@@ -259,8 +260,15 @@ const BarcodeTool = () => {
         }
       }
       setError('');
+      success = true;
     } catch (e) {
       setError(e.message || 'Failed to render');
+    }
+    
+    // Save to history only after successful render
+    const willSave = success && initialLoadDone && text && historyAddRef.current;
+    if (willSave) {
+      historyAddRef.current({ text, type });
     }
   };
 
@@ -524,11 +532,13 @@ const BarcodeTool = () => {
         {/* History (headless render via HistoryList) */}
         <HistoryList
           storageKey="barcode_history_v1"
-          newItem={initialLoadDone && text ? { text, type } : null}
+          newItem={null}
           dedupeKey={(v)=>`${v.type}|${v.text}`}
           onRestore={(v)=>restoreEntry(v)}
         >
-          {({ items, clear, deleteAt, restore }) => (
+          {({ items, clear, deleteAt, restore, add }) => {
+            historyAddRef.current = add;
+            return (
             <div className="mt-6 w-full">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-xs font-bold text-gray-600 dark:text-gray-400">Generation History</div>
@@ -569,7 +579,8 @@ const BarcodeTool = () => {
                 </div>
               )}
             </div>
-          )}
+          );
+          }}
         </HistoryList>
       </div>
     </div>

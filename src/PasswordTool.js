@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { passwordDictionary } from './passwordDictionary';
+import { generatePassword } from './utils';
 
 const PasswordTool = () => {
   const [passwords, setPasswords] = useState([]);
@@ -133,99 +134,27 @@ const PasswordTool = () => {
     try { localStorage.setItem('password_generator_toggles', JSON.stringify(data)); } catch {}
   }, [useNumbers, useSymbols, useUpperCase, onlyLowerCase, urlSafe, separatorsInput, useMixedSeparators, minWords, maxWords, minNumber, maxNumber]);
 
-  const generatePassword = () => {
-    const minW = Math.max(2, Math.min(10, minWords));
-    const maxW = Math.max(2, Math.min(10, Math.max(minW, maxWords)));
-    const numWords = minW + Math.floor(Math.random() * (maxW - minW + 1));
-    const words = [];
-    
-    const separators = [''];
-    for (let i = 0; i < separatorsInput.length; i++) {
-      const ch = separatorsInput[i];
-      if (!separators.includes(ch)) separators.push(ch);
-    }
-    
-    // Choose separator(s) first to determine capitalization strategy
-    let chosenSeparators = [];
-    if (useMixedSeparators && numWords > 1) {
-      for (let i = 0; i < numWords - 1; i++) {
-        chosenSeparators.push(separators[Math.floor(Math.random() * separators.length)]);
-      }
-    } else {
-      const sep = separators[Math.floor(Math.random() * separators.length)];
-      for (let i = 0; i < numWords - 1; i++) {
-        chosenSeparators.push(sep);
-      }
-    }
-    
-    for (let i = 0; i < numWords; i++) {
-      let word = passwordDictionary[Math.floor(Math.random() * passwordDictionary.length)];
-      
-      // Capitalize if: not onlyLowerCase AND (useUpperCase randomly OR this is not the first word and previous separator is empty)
-      const prevSepIsEmpty = i > 0 && chosenSeparators[i - 1] === '';
-      const shouldCapitalize = !onlyLowerCase && (
-        (useUpperCase && Math.random() > 0.5) || 
-        prevSepIsEmpty
-      );
-      
-      if (shouldCapitalize) {
-        word = word.charAt(0).toUpperCase() + word.slice(1);
-      }
-      
-      words.push(word);
-    }
-    
-    const separatorPositions = [];
-    let password = '';
-    if (useMixedSeparators && words.length > 0) {
-      // Build with a random separator between each pair
-      password = words[0];
-      for (let i = 1; i < words.length; i++) {
-        const sepEach = chosenSeparators[i - 1];
-        separatorPositions.push({ index: password.length, sep: sepEach });
-        password += sepEach + words[i];
-      }
-    } else {
-      const sep = chosenSeparators.length > 0 ? chosenSeparators[0] : '';
-      password = words.join(sep);
-      // Track separator positions for uniform separator
-      if (sep && words.length > 1) {
-        let pos = words[0].length;
-        for (let i = 1; i < words.length; i++) {
-          separatorPositions.push({ index: pos, sep: sep });
-          pos += sep.length + words[i].length;
-        }
-      }
-    }
-    
-    // Replace one separator with a number from the defined range
-    if (useNumbers && separatorPositions.length > 0) {
-      const numMin = Math.max(0, minNumber);
-      const numMax = Math.max(numMin, maxNumber);
-      const randomNum = numMin + Math.floor(Math.random() * (numMax - numMin + 1));
-      const posToReplace = separatorPositions[Math.floor(Math.random() * separatorPositions.length)];
-      
-      // Replace the chosen separator with the number
-      const beforeSep = password.substring(0, posToReplace.index);
-      const afterSep = password.substring(posToReplace.index + posToReplace.sep.length);
-      password = beforeSep + randomNum + afterSep;
-    }
-    
-    if (useSymbols) {
-      const specialChars = urlSafe 
-        ? ['-', '_', '.', '~', '+'] 
-        : ['!', '@', '#', '$', '%', '&', '*', '+', '=', '?', '-', '_', '.', '~', '^'];
-      const specialChar = specialChars[Math.floor(Math.random() * specialChars.length)];
-      password += specialChar;
-    }
-    
-    return password;
+  const generatePasswordWithConfig = () => {
+    return generatePassword({
+      wordList: passwordDictionary,
+      minWords,
+      maxWords,
+      useNumbers,
+      useSymbols,
+      useUpperCase,
+      onlyLowerCase,
+      urlSafe,
+      minNumber,
+      maxNumber,
+      separatorsInput,
+      useMixedSeparators
+    });
   };
 
   const generatePasswords = () => {
     const newPasswords = [];
     for (let i = 0; i < 24; i++) {
-      newPasswords.push(generatePassword());
+      newPasswords.push(generatePasswordWithConfig());
     }
     setPasswords(newPasswords);
     setCopied(null);

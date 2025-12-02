@@ -61,6 +61,20 @@ const HistoryList = ({
 
   const handleClear = () => setItems([]);
   const handleDelete = (idx) => setItems((prev) => prev.filter((_, i) => i !== idx));
+  const handleAdd = (item) => {
+    if (item == null) return;
+    const k = dedupeKey(item);
+    if (k === lastKeyRef.current) return;
+    lastKeyRef.current = k;
+    setItems((prev) => {
+      const next = prev.filter((it) => {
+        try { return dedupeKey(it.value) !== k; } catch { return true; }
+      });
+      next.unshift({ value: item, ts: Date.now() });
+      const result = next.slice(0, max);
+      return result;
+    });
+  };
 
   // Headless mode: let the parent render everything, providing operations and data.
   if (typeof children === 'function') {
@@ -69,6 +83,7 @@ const HistoryList = ({
       clear: handleClear,
       deleteAt: handleDelete,
       restore: (value, index) => onRestore(value, index),
+      add: handleAdd,
     });
   }
 
