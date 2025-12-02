@@ -2,6 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --sidebar-width: 256px;
+}
+
+@layer utilities {
+  .main-content-offset {
+    padding-top: 3.5rem; /* 56px for mobile top bar */
+  }
+
+  @media (min-width: 1024px) {
+    .main-content-offset {
+      padding-top: 0;
+      padding-left: var(--sidebar-width);
+    }
+  }
+}
+
+/* Pixel Art Icon Sprite */
+.icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background-image: url('../img/icons.png');
+  background-size: 408px 24px;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  vertical-align: middle;
+}
+
+/* Invert icons when on dark backgrounds */
+.bg-gray-700 .icon,
+.bg-gray-800 .icon,
+.bg-gray-600 .icon,
+.bg-gray-500 .icon,
+.dark .icon {
+  filter: invert(1);
+}
+
+.icon-lock { background-position: 0 0; }
+.icon-bitcoin { background-position: -24px 0; }
+.icon-cycled-arrows { background-position: -48px 0; }
+.icon-barcode { background-position: -72px 0; }
+.icon-socket-cord { background-position: -96px 0; }
+.icon-clock { background-position: -120px 0; }
+.icon-nodes { background-position: -144px 0; }
+.icon-shield { background-position: -168px 0; }
+.icon-abc { background-position: -192px 0; }
+.icon-closed-eye { background-position: -216px 0; }
+.icon-tag-id { background-position: -240px 0; }
+.icon-wireless { background-position: -264px 0; }
+.icon-bidirectional-arrows { background-position: -288px 0; }
+.icon-copy { background-position: -312px 0; }
+.icon-ok { background-position: -336px 0; }
+.icon-cancel { background-position: -360px 0; }
+.icon-save { background-position: -384px 0; }
+
 @keyframes barcode-entrance {
   0% {
     opacity: 0;

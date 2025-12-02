@@ -1,0 +1,171 @@
+/* Common Component Utility Classes */
+/* These classes standardize the look and feel across all tools */
+
+@tailwind utilities;
+
+@layer utilities {
+  /* Custom Scrollbar */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 4px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(156, 163, 175, 0.7);
+  }
+  
+  .dark .custom-scrollbar {
+    scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
+  }
+  
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(75, 85, 99, 0.5);
+  }
+  
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(75, 85, 99, 0.7);
+  }
+}
+
+/* Layout Containers */
+.tool-container {
+  @apply flex-1 flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900;
+}
+
+.tool-content {
+  @apply flex-1 overflow-auto p-6 space-y-6 custom-scrollbar mx-auto;
+  max-width: 1600px;
+  width: 100%;
+}
+
+/* Typography */
+.tool-title {
+  @apply text-xl font-bold mb-4 text-gray-900 dark:text-gray-100;
+}
+
+.tool-subtitle {
+  @apply text-xs text-gray-600 dark:text-gray-400 mb-4;
+}
+
+/* Buttons */
+.btn {
+  @apply px-3 py-2 rounded font-semibold transition-colors focus:outline-none;
+}
+
+.btn-primary {
+  @apply btn bg-gray-700 dark:bg-gray-600 text-white hover:bg-gray-800 dark:hover:bg-gray-500;
+}
+
+.btn-secondary {
+  @apply btn bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:opacity-90;
+}
+
+.btn-sm {
+  @apply px-2 py-1 text-xs;
+}
+
+.btn-icon {
+  @apply flex items-center gap-1;
+}
+
+/* Form Elements */
+.input {
+  @apply px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-jwtBlue;
+}
+
+.input-sm {
+  @apply text-sm;
+}
+
+.input-xs {
+  @apply text-xs;
+}
+
+.input-mono {
+  @apply font-mono;
+}
+
+.textarea {
+  @apply w-full p-3 font-mono text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded resize-none focus:outline-none focus:ring-2 focus:ring-jwtBlue text-gray-900 dark:text-gray-100;
+}
+
+.select {
+  @apply px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-jwtBlue;
+}
+
+.label {
+  @apply block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1;
+}
+
+/* Cards & Panels */
+.card {
+  @apply bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-4;
+}
+
+.card-elevated {
+  @apply card shadow-md;
+}
+
+/* Alerts & Info Boxes */
+.alert {
+  @apply p-4 rounded-lg border;
+}
+
+.alert-info {
+  @apply alert bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800;
+}
+
+.alert-info-title {
+  @apply text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2;
+}
+
+.alert-info-text {
+  @apply text-xs text-blue-800 dark:text-blue-200;
+}
+
+.alert-error {
+  @apply alert bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700;
+}
+
+.alert-error-text {
+  @apply text-xs text-red-600 dark:text-red-400;
+}
+
+.alert-success {
+  @apply alert bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700;
+}
+
+.alert-success-text {
+  @apply text-sm font-bold text-green-700 dark:text-green-300 text-center;
+}
+
+.alert-warning {
+  @apply alert bg-yellow-50 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700;
+}
+
+.alert-warning-text {
+  @apply text-xs text-yellow-800 dark:text-yellow-200;
+}
+
+/* Grid Layouts */
+.grid-2col {
+  @apply grid md:grid-cols-2 gap-4;
+}
+
+.grid-cards {
+  @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-3;
+}

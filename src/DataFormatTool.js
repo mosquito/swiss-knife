@@ -324,14 +324,14 @@ const DataFormatTool = () => {
   const copyToClipboard = async (text) => { try { await navigator.clipboard.writeText(text); } catch { /* ignore */ } };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900">
-      <div className="flex-1 overflow-auto p-6 space-y-4 custom-scrollbar">
-        <h2 className="text-xl font-bold">Data Format Converter</h2>
+    <div className="tool-container">
+      <div className="tool-content">
+        <h2 className="tool-title">Data Format Converter</h2>
         <p className="text-xs text-gray-600 dark:text-gray-400">Bidirectional conversion between JSON, YAML, TOML. XML and HTML formatting only (no conversion). Edit either pane; the other updates. All local. TOML support is minimal.</p>
         <div className="flex gap-2 flex-wrap text-xs">
-          <button onClick={handleFormatBoth} className="px-3 py-1 rounded bg-jwtBlue text-white font-semibold hover:opacity-90">Format</button>
-          <button onClick={handleSwap} className="px-3 py-1 rounded bg-jwtPurple text-white font-semibold hover:opacity-90">Swap</button>
-          <button onClick={handleClear} className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:opacity-90">Clear</button>
+          <button onClick={handleFormatBoth} className="btn-primary btn-sm">Format</button>
+          <button onClick={handleSwap} className="btn-primary btn-sm">Swap</button>
+          <button onClick={handleClear} className="btn-secondary btn-sm">Clear</button>
         </div>
         <div className="grid md:grid-cols-2 gap-4">
           {/* LEFT PANE */}

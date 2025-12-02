@@ -85,15 +85,15 @@ const DateTimeTool = () => {
   const nowInfo = formatDetails(nowMs);
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900">
-      <div className="flex-1 overflow-auto p-6 space-y-6 custom-scrollbar">
-        <h2 className="text-xl font-bold">Date / Time</h2>
+    <div className="tool-container">
+      <div className="tool-content">
+        <h2 className="tool-title">Date / Time</h2>
         <p className="text-xs text-gray-600 dark:text-gray-400">Convert between Unix timestamps and human-readable datetimes. All calculations are local.</p>
 
         {/* Two Column Inputs */}
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid-2col">
           {/* TIMESTAMP INPUT */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-4">
+          <div className="card">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Timestamp → Date</span>
             </div>
@@ -118,7 +118,7 @@ const DateTimeTool = () => {
           </div>
 
           {/* DATETIME INPUT */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-4">
+          <div className="card">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Date → Unix Timestamp</span>
             </div>
@@ -144,7 +144,7 @@ const DateTimeTool = () => {
         </div>
 
         {/* NOW SECTION BELOW */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-4">
+        <div className="card">
           <div className="text-xs font-bold mb-2 text-gray-500 dark:text-gray-400">Current Time (Browser)</div>
           <div className="font-mono text-[11px] break-all space-y-1">
             <div><span className="font-bold">ISO UTC:</span> {nowInfo.isoUTC}</div>

@@ -337,16 +337,16 @@ const WifiQRTool = () => {
           }
         }
       `}</style>
-      <div className="flex-1 flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900">
-        <div className="flex-1 overflow-auto p-6 space-y-4 custom-scrollbar max-w-4xl mx-auto">
+      <div className="tool-container">
+        <div className="tool-content">
         <div>
-          <h2 className="text-xl font-bold">WiFi QR Code Generator</h2>
-          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+          <h2 className="tool-title">WiFi QR Code Generator</h2>
+          <p className="tool-subtitle mt-1">
             Generate QR codes that automatically connect to WiFi networks when scanned
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4 items-start">
+        <div className="grid-2col items-start">
           {/* Controls */}
           <div className="flex flex-col gap-3">
             <div>
@@ -380,7 +380,7 @@ const WifiQRTool = () => {
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                   type="button"
                 >
-                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                  <span className={`icon ${showPassword ? 'icon-closed-eye' : 'icon-closed-eye'}`}></span>
                 </button>
               </div>
             </div>
@@ -497,14 +497,14 @@ const WifiQRTool = () => {
               <button
                 onClick={handleDownload}
                 disabled={!imgUrl}
-                className="px-3 py-1 rounded bg-jwtBlue text-white font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Download
               </button>
               <button
                 onClick={handleCopyImage}
                 disabled={!imgUrl}
-                className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-secondary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Copy
               </button>
@@ -517,7 +517,7 @@ const WifiQRTool = () => {
               </button>
               <button
                 onClick={handleShare}
-                className="px-3 py-1 rounded bg-jwtPurple text-white font-semibold hover:opacity-90"
+                className="btn-primary btn-sm"
               >
                 Share
               </button>
@@ -537,7 +537,7 @@ const WifiQRTool = () => {
           </div>
 
           {/* Preview */}
-          <div className="flex flex-col bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-4">
+          <div className="card flex flex-col">
             <div className="text-xs font-bold mb-2 text-gray-500 dark:text-gray-400">
               QR Code Preview ({outputFormat.toUpperCase()})
             </div>
@@ -586,8 +586,8 @@ const WifiQRTool = () => {
         </div>
 
         {/* Info Section */}
-        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
+        <div className="alert-info">
+          <h3 className="alert-info-title">
             How to Use
           </h3>
           <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
@@ -635,7 +635,7 @@ const WifiQRTool = () => {
                         }}
                         className="text-xs px-1 rounded opacity-0 group-hover:opacity-100 transition"
                       >
-                        ♻️
+                        <span className="icon icon-ok"></span>
                       </button>
                       <button
                         onClick={() => {
@@ -653,7 +653,7 @@ const WifiQRTool = () => {
                         onClick={() => deleteAt(idx)}
                         className="text-xs px-1 rounded opacity-0 group-hover:opacity-100 hover:bg-red-200 dark:hover:bg-red-800/60 transition"
                       >
-                        ❌
+                        <span className="icon icon-cancel"></span>
                       </button>
                     </div>
                   ))}

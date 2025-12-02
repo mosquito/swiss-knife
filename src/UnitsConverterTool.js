@@ -82,12 +82,26 @@ const UNIT_CATEGORIES = {
       { id: 'bin', label: 'Binary (Base 2)' },
     ],
     convert: (value, fromUnit) => {
+      // Remove whitespace and convert to string
+      const cleaned = String(value).trim();
+      
       // Parse input based on source base
       let decimalValue;
-      if (fromUnit === 'dec') decimalValue = parseInt(value, 10);
-      else if (fromUnit === 'hex') decimalValue = parseInt(value, 16);
-      else if (fromUnit === 'oct') decimalValue = parseInt(value, 8);
-      else if (fromUnit === 'bin') decimalValue = parseInt(value, 2);
+      if (fromUnit === 'dec') {
+        decimalValue = parseInt(cleaned, 10);
+      } else if (fromUnit === 'hex') {
+        // Remove optional 0x prefix
+        const hexStr = cleaned.replace(/^0x/i, '');
+        decimalValue = parseInt(hexStr, 16);
+      } else if (fromUnit === 'oct') {
+        // Remove optional 0o prefix
+        const octStr = cleaned.replace(/^0o/i, '');
+        decimalValue = parseInt(octStr, 8);
+      } else if (fromUnit === 'bin') {
+        // Remove optional 0b prefix
+        const binStr = cleaned.replace(/^0b/i, '');
+        decimalValue = parseInt(binStr, 2);
+      }
       
       // Check if parsing was successful
       if (isNaN(decimalValue)) {
@@ -122,16 +136,42 @@ const UNIT_CATEGORIES = {
   }
 };
 
-const ByteConverterTool = () => {
+const UnitsConverterTool = () => {
   const [category, setCategory] = useState('storage');
   const [inputValue, setInputValue] = useState('1');
   const [inputUnit, setInputUnit] = useState('MiB');
   const [results, setResults] = useState({});
   const [numberBase, setNumberBase] = useState('dec'); // 'dec', 'bin', 'hex', 'oct' (for number display)
   const [storageBase, setStorageBase] = useState('binary'); // 'binary' (1024) or 'decimal' (1000)
+  const [parseError, setParseError] = useState('');
 
   const currentCategory = UNIT_CATEGORIES[category];
   const UNITS = currentCategory.units?.binary ? currentCategory.units[storageBase] : currentCategory.units;
+
+  // Auto-switch numberBase when prefix is detected in storage category
+  useEffect(() => {
+    if (category === 'storage' && inputValue) {
+      const trimmed = inputValue.trim();
+      if (/^0x/i.test(trimmed)) {
+        setNumberBase('hex');
+      } else if (/^0o/i.test(trimmed)) {
+        setNumberBase('oct');
+      } else if (/^0b/i.test(trimmed)) {
+        setNumberBase('bin');
+      }
+    }
+    
+    if (category === 'number' && inputValue) {
+      const trimmed = inputValue.trim();
+      if (/^0x/i.test(trimmed)) {
+        setInputUnit('hex');
+      } else if (/^0o/i.test(trimmed)) {
+        setInputUnit('oct');
+      } else if (/^0b/i.test(trimmed)) {
+        setInputUnit('bin');
+      }
+    }
+  }, [inputValue, category]);
 
   // Reset input unit when category changes
   useEffect(() => {
@@ -139,21 +179,94 @@ const ByteConverterTool = () => {
     setResults({});
   }, [category, storageBase]);
 
+  // Parse input value based on numberBase for storage category
+  const parseInputValue = (inputStr) => {
+    if (category !== 'storage') {
+      const val = parseFloat(inputStr);
+      if (isNaN(val)) {
+        setParseError('Invalid number');
+      } else {
+        setParseError('');
+      }
+      return val;
+    }
+
+    // Remove whitespace
+    let cleaned = inputStr.trim();
+    
+    // Handle empty input
+    if (!cleaned) {
+      setParseError('');
+      return NaN;
+    }
+    
+    let detectedBase = numberBase;
+    let valueToProcess = cleaned;
+    
+    // Auto-detect base from prefix, overriding numberBase selection
+    if (/^0x/i.test(cleaned)) {
+      detectedBase = 'hex';
+      valueToProcess = cleaned.substring(2); // Remove 0x prefix
+    } else if (/^0o/i.test(cleaned)) {
+      detectedBase = 'oct';
+      valueToProcess = cleaned.substring(2); // Remove 0o prefix
+    } else if (/^0b/i.test(cleaned)) {
+      detectedBase = 'bin';
+      valueToProcess = cleaned.substring(2); // Remove 0b prefix
+    } else {
+      // No prefix detected, use as-is with selected numberBase
+      valueToProcess = cleaned;
+    }
+    
+    // Parse based on detected base
+    let result;
+    if (detectedBase === 'hex') {
+      result = parseInt(valueToProcess, 16);
+    } else if (detectedBase === 'oct') {
+      result = parseInt(valueToProcess, 8);
+    } else if (detectedBase === 'bin') {
+      result = parseInt(valueToProcess, 2);
+    } else {
+      result = parseFloat(valueToProcess);
+    }
+    
+    if (isNaN(result)) {
+      setParseError(`Invalid ${detectedBase.toUpperCase()} value`);
+    } else {
+      setParseError('');
+    }
+    
+    return result;
+  };
+
   useEffect(() => {
-    const value = parseFloat(inputValue);
-    if (isNaN(value)) {
-      setResults({});
+    // Handle number base conversions separately (doesn't need numeric parsing)
+    if (category === 'number') {
+      // Auto-prefix input value based on selected base
+      let processedInput = inputValue.trim();
+      
+      if (inputUnit === 'hex' && !/^0x/i.test(processedInput)) {
+        processedInput = '0x' + processedInput;
+      } else if (inputUnit === 'oct' && !/^0o/i.test(processedInput)) {
+        processedInput = '0o' + processedInput;
+      } else if (inputUnit === 'bin' && !/^0b/i.test(processedInput)) {
+        processedInput = '0b' + processedInput;
+      }
+      
+      const converted = currentCategory.convert(processedInput, inputUnit);
+      // Check if conversion failed
+      if (converted.dec === '') {
+        setParseError(`Invalid ${inputUnit.toUpperCase()} value`);
+      } else {
+        setParseError('');
+      }
+      setResults(converted);
       return;
     }
 
-    // Handle number base conversions separately
-    if (category === 'number') {
-      if (currentCategory.isIntegerOnly && !Number.isInteger(value)) {
-        setResults({});
-        return;
-      }
-      const converted = currentCategory.convert(inputValue, inputUnit);
-      setResults(converted);
+    const value = parseInputValue(inputValue);
+    if (isNaN(value)) {
+      setResults({});
       return;
     }
 
@@ -187,41 +300,60 @@ const ByteConverterTool = () => {
     });
 
     setResults(newResults);
-  }, [inputValue, inputUnit, category, storageBase]);
+  }, [inputValue, inputUnit, category, storageBase, numberBase]);
 
   const formatNumber = (num) => {
     if (num === undefined || num === null || isNaN(num)) return '';
     
-    // For very large or very small numbers, use exponential notation
-    if (num >= 1e15 || (num < 0.000001 && num > 0)) {
-      return num.toExponential(6);
-    }
-    
-    // For integers or numbers with few decimals
+    // For integers
     if (Number.isInteger(num)) {
       return num.toLocaleString();
     }
     
-    // For decimal numbers, show up to 6 significant digits
-    const str = num.toString();
-    if (str.length > 15) {
-      return num.toPrecision(10);
+    // For very small decimals, show more precision
+    if (num > 0 && num < 0.000001) {
+      return num.toLocaleString(undefined, { 
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 20 
+      });
     }
     
-    return num.toLocaleString(undefined, { maximumFractionDigits: 6 });
+    // For decimal numbers, show up to 6 decimal places
+    return num.toLocaleString(undefined, { 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 6 
+    });
   };
 
   const formatByteValue = (num, base) => {
     if (num === undefined || num === null || isNaN(num)) return '';
     
-    // Only show base representations for whole bytes
-    const wholeBytes = Math.floor(num);
-    
     if (base === 'dec') return formatNumber(num);
-    if (base === 'hex') return wholeBytes > 0 ? '0x' + wholeBytes.toString(16).toUpperCase() : '0x0';
-    if (base === 'oct') return wholeBytes > 0 ? '0o' + wholeBytes.toString(8) : '0o0';
-    if (base === 'bin') return wholeBytes > 0 ? '0b' + wholeBytes.toString(2) : '0b0';
-    return formatNumber(num);
+    
+    // For hex/oct/bin, show whole number part in that base + decimal fraction if needed
+    const wholePart = Math.floor(num);
+    const fracPart = num - wholePart;
+    
+    let baseStr = '';
+    if (base === 'hex') {
+      baseStr = '0x' + wholePart.toString(16).toUpperCase();
+    } else if (base === 'oct') {
+      baseStr = '0o' + wholePart.toString(8);
+    } else if (base === 'bin') {
+      baseStr = '0b' + wholePart.toString(2);
+    }
+    
+    // If there's a fractional part, append it in decimal
+    if (fracPart > 0) {
+      const fracStr = fracPart.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 6
+      });
+      // Remove leading "0"
+      baseStr += fracStr.substring(1);
+    }
+    
+    return baseStr;
   };
 
   const formatResult = (value, unitId) => {
@@ -307,61 +439,55 @@ const ByteConverterTool = () => {
           <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
             Input
           </h3>
-          <div className="grid grid-cols-1 gap-3">
-            {/* First row: Value input */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                type={category === 'number' ? 'text' : 'number'}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder={category === 'number' ? 'Enter integer value' : 'Enter value'}
-                className="input flex-1"
-                step="any"
-                min={category === 'temperature' ? undefined : '0'}
-              />
-              <select
-                value={inputUnit}
-                onChange={(e) => setInputUnit(e.target.value)}
-                className="select w-full sm:w-48"
-              >
-                {UNITS.map(unit => (
-                  <option key={unit.id} value={unit.id}>
-                    {unit.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Second row: Number base and Storage base selects (only for storage) */}
+          <div className="flex flex-col lg:flex-row gap-2">
+            <input
+              type={category === 'number' || category === 'storage' ? 'text' : 'number'}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder={category === 'number' ? 'Enter integer value' : 'Enter value'}
+              className={`input flex-1 ${parseError ? 'border-red-500 dark:border-red-500' : ''}`}
+              step="any"
+              min={category === 'temperature' ? undefined : '0'}
+            />
+            <select
+              value={inputUnit}
+              onChange={(e) => setInputUnit(e.target.value)}
+              className="select w-full lg:w-40"
+            >
+              {UNITS.map(unit => (
+                <option key={unit.id} value={unit.id}>
+                  {unit.label}
+                </option>
+              ))}
+            </select>
             {category === 'storage' && (
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1">
-                  <label className="label mb-1">Display Format</label>
-                  <select
-                    value={numberBase}
-                    onChange={(e) => setNumberBase(e.target.value)}
-                    className="select w-full"
-                  >
-                    <option value="dec">Decimal (DEC)</option>
-                    <option value="bin">Binary (BIN)</option>
-                    <option value="hex">Hexadecimal (HEX)</option>
-                    <option value="oct">Octal (OCT)</option>
-                  </select>
-                </div>
-                <div className="flex-1">
-                  <label className="label mb-1">Unit System</label>
-                  <select
-                    value={storageBase}
-                    onChange={(e) => setStorageBase(e.target.value)}
-                    className="select w-full"
-                  >
-                    <option value="binary">Binary - IEC (1024)</option>
-                    <option value="decimal">Decimal - SI (1000)</option>
-                  </select>
-                </div>
-              </div>
+              <>
+                <select
+                  value={numberBase}
+                  onChange={(e) => setNumberBase(e.target.value)}
+                  className="select w-full lg:w-32"
+                >
+                  <option value="dec">DEC</option>
+                  <option value="bin">BIN</option>
+                  <option value="hex">HEX</option>
+                  <option value="oct">OCT</option>
+                </select>
+                <select
+                  value={storageBase}
+                  onChange={(e) => setStorageBase(e.target.value)}
+                  className="select w-full lg:w-32"
+                >
+                  <option value="binary">IEC</option>
+                  <option value="decimal">SI</option>
+                </select>
+              </>
             )}
           </div>
+          {parseError && (
+            <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+              {parseError}
+            </div>
+          )}
         </div>
 
         {/* Results Section */}
@@ -384,8 +510,17 @@ const ByteConverterTool = () => {
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       {unit.label}
                     </div>
-                    <div className="text-xl font-mono text-gray-900 dark:text-gray-100 mt-1 break-all">
-                      {formatResult(results[unit.id], unit.id)}
+                    <div className="mt-1 break-all">
+                      <div className="text-xl font-mono text-gray-900 dark:text-gray-100">
+                        {category === 'storage' ? formatByteValue(results[unit.id], 'dec') : formatResult(results[unit.id], unit.id)}
+                      </div>
+                      {category === 'storage' && (
+                        <div className="text-xs font-mono text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
+                          <div>BIN: {formatByteValue(results[unit.id], 'bin')}</div>
+                          <div>HEX: {formatByteValue(results[unit.id], 'hex')}</div>
+                          <div>OCT: {formatByteValue(results[unit.id], 'oct')}</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <button
@@ -500,4 +635,4 @@ const ByteConverterTool = () => {
   );
 };
 
-export default ByteConverterTool;
+export default UnitsConverterTool;

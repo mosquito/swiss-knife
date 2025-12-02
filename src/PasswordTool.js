@@ -206,10 +206,9 @@ const PasswordTool = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900">
-      <div className="flex-1 overflow-auto p-6 custom-scrollbar">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <h2 className="text-xl font-bold">Password Generator</h2>
+    <div className="tool-container">
+      <div className="tool-content">
+          <h2 className="tool-title">Password Generator</h2>
           <p className="text-xs text-gray-600 dark:text-gray-400">
             Generates 24 readable passwords from a custom wordlist. Configure numbers, symbols, case, and separators (including mixed). Click any password to copy; settings persist locally.
           </p>
@@ -219,7 +218,7 @@ const PasswordTool = () => {
           <div className="space-y-4">
             <button
               onClick={generatePasswords}
-              className="w-full px-4 py-2 rounded bg-jwtBlue text-white font-semibold hover:opacity-90 transition"
+              className="w-full px-4 py-2 rounded bg-gray-700 dark:bg-gray-600 text-white font-semibold hover:bg-gray-800 dark:hover:bg-gray-500 transition"
             >
               Regenerate
             </button>
@@ -237,7 +236,7 @@ const PasswordTool = () => {
                     <button
                       className="ml-4 px-3 py-1 text-xs rounded bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 opacity-0 group-hover:opacity-100 transition"
                     >
-                      {copied === index ? '✓ Copied' : 'Copy'}
+                      {copied === index ? <><span className="icon icon-ok"></span> Copied</> : <><span className="icon icon-copy"></span> Copy</>}
                     </button>
                   </div>
                 ))}
@@ -383,7 +382,6 @@ const PasswordTool = () => {
               )}
             </div>
           </div>
-        </div>
       </div>
     </div>
   );

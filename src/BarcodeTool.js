@@ -332,8 +332,8 @@ const BarcodeTool = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900">
-      <div className="flex-1 overflow-auto p-6 space-y-4 custom-scrollbar max-w-4xl mx-auto">
+    <div className="tool-container">
+      <div className="tool-content">
         {/* Sync combined barcode state (type+text) to base64 URL param 'value' */}
         <Base64QuerySync
           value={{ type, text }}
@@ -358,23 +358,23 @@ const BarcodeTool = () => {
           queryParam="barcode"
           updateOnMount={false}
         />
-        <h2 className="text-xl font-bold">Barcode Generator</h2>
-        <div className="grid md:grid-cols-2 gap-4 items-start">
+        <h2 className="tool-title">Barcode Generator</h2>
+        <div className="grid-2col items-start">
           {/* Controls */}
           <div className="flex flex-col gap-3">
             <div>
-              <label className="text-xs font-bold text-gray-600 dark:text-gray-400">Barcode Content</label>
+              <label className="label">Barcode Content</label>
               <textarea
                 value={text}
                 onChange={(e)=>setText(e.target.value)}
                 placeholder="Enter content (digits/text depending on type)"
-                className="mt-1 w-full text-xs font-mono px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-jwtBlue resize-none"
+                className="textarea input-xs h-20"
                 spellCheck="false"
                 rows={3}
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-600 dark:text-gray-400">Barcode Type</label>
+              <label className="label">Barcode Type</label>
               <div className="mt-1 relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -434,7 +434,7 @@ const BarcodeTool = () => {
             </div>
             {SYMS.find(s => s.value === type)?.examples && SYMS.find(s => s.value === type)?.examples.length > 0 && (
               <div>
-                <label className="text-xs font-bold text-gray-600 dark:text-gray-400">Examples</label>
+                <label className="label">Examples</label>
                 <select
                   onChange={(e) => {
                     if (e.target.value) {
@@ -442,7 +442,7 @@ const BarcodeTool = () => {
                       e.target.value = ''; // Reset select
                     }
                   }}
-                  className="mt-1 w-full text-xs px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-jwtPurple cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="select input-xs w-full mt-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
                   defaultValue=""
                 >
                   <option value="" className="text-gray-500">Select an example...</option>
@@ -453,7 +453,7 @@ const BarcodeTool = () => {
               </div>
             )}
             <div>
-              <label className="text-xs font-bold text-gray-600 dark:text-gray-400">Output Format</label>
+              <label className="label">Output Format</label>
               <div className="mt-1 flex gap-2">
                 <button
                   onClick={() => setOutputFormat('png')}
@@ -479,7 +479,7 @@ const BarcodeTool = () => {
             </div>
             {outputFormat === 'png' && (
               <div>
-                <label className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                <label className="label">
                   PNG Scale: {pngScale}x
                 </label>
                 <input
@@ -501,16 +501,16 @@ const BarcodeTool = () => {
               </div>
             )}
             <div className="flex gap-2 flex-wrap text-xs">
-              <button onClick={handleDownload} className="px-3 py-1 rounded bg-jwtBlue text-white font-semibold hover:opacity-90">Download {outputFormat.toUpperCase()}</button>
-              <button onClick={handleCopyImage} className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:opacity-90">Copy Image</button>
-              <button onClick={handleShare} className="px-3 py-1 rounded bg-jwtPurple text-white font-semibold hover:opacity-90">Share</button>
-              <button onClick={()=>setInverted(v=>!v)} className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:opacity-90">{inverted ? 'Black on White' : 'White on Black'}</button>
+              <button onClick={handleDownload} className="btn-primary btn-sm">Download {outputFormat.toUpperCase()}</button>
+              <button onClick={handleCopyImage} className="btn-secondary btn-sm">Copy Image</button>
+              <button onClick={handleShare} className="btn-primary btn-sm">Share</button>
+              <button onClick={()=>setInverted(v=>!v)} className="btn-secondary btn-sm">{inverted ? 'Black on White' : 'White on Black'}</button>
             </div>
-            {error && <div className="text-[10px] text-red-600 font-mono">{error}</div>}
+            {error && <div className="alert-error-text">{error}</div>}
           </div>
 
           {/* Preview */}
-          <div className="flex flex-col bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-4">
+          <div className="card flex flex-col">
             <div className="text-xs font-bold mb-2 text-gray-500 dark:text-gray-400">Barcode Preview ({outputFormat.toUpperCase()})</div>
             <div className={`flex items-center justify-center min-h-[220px] p-4 border-2 border-gray-400 dark:border-gray-500 rounded ${inverted ? 'bg-black' : 'bg-white'}`}>
               {imgUrl ? (
@@ -541,8 +541,8 @@ const BarcodeTool = () => {
             return (
             <div className="mt-6 w-full">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-xs font-bold text-gray-600 dark:text-gray-400">Generation History</div>
-                <button onClick={clear} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:opacity-90">Clear</button>
+                <div className="label">Generation History</div>
+                <button onClick={clear} className="btn-secondary btn-sm">Clear</button>
               </div>
               {items.length === 0 ? (
                 <div className="text-[11px] text-gray-500">No history yet.</div>
@@ -558,7 +558,7 @@ const BarcodeTool = () => {
                         onClick={() => { restore(it.value, idx); setText(it.value.text); setType(it.value.type); }}
                         className="text-xs px-1 rounded opacity-0 group-hover:opacity-100 transition"
                       >
-                        ♻️
+                        <span className="icon icon-ok"></span>
                       </button>
                       <button
                         onClick={() => { restore(it.value, idx); setText(it.value.text); setType(it.value.type); }}
@@ -572,7 +572,7 @@ const BarcodeTool = () => {
                         onClick={() => deleteAt(idx)}
                         className="text-xs px-1 rounded opacity-0 group-hover:opacity-100 hover:bg-red-200 dark:hover:bg-red-800/60 transition"
                       >
-                        ❌
+                        <span className="icon icon-cancel"></span>
                       </button>
                     </div>
                   ))}

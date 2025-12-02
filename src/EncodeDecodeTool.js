@@ -77,9 +77,9 @@ const EncodeDecodeTool = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900">
-      <div className="flex-1 overflow-auto p-6 space-y-4 custom-scrollbar">
-        <h2 className="text-xl font-bold">Encode / Decode</h2>
+    <div className="tool-container">
+      <div className="tool-content">
+        <h2 className="tool-title">Encode / Decode</h2>
         <p className="text-xs text-gray-600 dark:text-gray-400">Transform text between Base64, Base32, Hex and URL encodings. All operations stay in your browser.</p>
         <div className="flex flex-wrap gap-2 text-xs items-center">
           <label className="flex items-center gap-1">Mode:
@@ -93,9 +93,9 @@ const EncodeDecodeTool = () => {
               {formats.map(f=> <option key={f} value={f}>{f.toUpperCase()}</option>)}
             </select>
           </label>
-          <button onClick={handleSwap} className="px-3 py-1 rounded bg-jwtPurple text-white font-semibold hover:opacity-90">Swap</button>
-          <button onClick={handleClear} className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:opacity-90">Clear</button>
-          <button onClick={()=>handleCopy(output)} className="px-3 py-1 rounded bg-jwtBlue text-white hover:opacity-90">Copy Output</button>
+          <button onClick={handleSwap} className="btn-primary btn-sm">Swap</button>
+          <button onClick={handleClear} className="btn-secondary btn-sm">Clear</button>
+          <button onClick={()=>handleCopy(output)} className="btn-primary btn-sm">Copy Output</button>
         </div>
         <div className="grid md:grid-cols-2 gap-4">
           <div className="flex flex-col bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded h-[55vh] md:h-[60vh] min-h-0">

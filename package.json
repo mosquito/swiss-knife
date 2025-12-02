@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A 100% client-side developer toolkit running entirely in your browser with zero network access. No data ever leaves your device.",
   "main": "src/index.js",
+  "sideEffects": [
+    "*.css"
+  ],
   "scripts": {
     "start": "webpack serve --mode development --open",
     "build": "webpack --mode production && webpack --config webpack.offline.config.js",
@@ -40,6 +43,7 @@
     "tailwindcss": "^3.3.3",
     "vm-browserify": "^1.1.2",
     "webpack": "^5.89.0",
+    "webpack-bundle-analyzer": "^5.0.1",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.2.2"
   }

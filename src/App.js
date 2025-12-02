@@ -14,15 +14,14 @@ import PasswordTool from './PasswordTool';
 import PasswordHashTool from './PasswordHashTool';
 import UuidTool from './UuidTool';
 import WifiQRTool from './WifiQRTool';
-import ByteConverterTool from './ByteConverterTool';
-import GithubCorner from './GithubCorner';
+import UnitsConverterTool from './UnitsConverterTool';
 
 const App = () => {
   const [activeTool, setActiveTool] = useState('jwt');
 
   // Sync tool selection with location.hash and listen for external hash changes
   useEffect(() => {
-    const allowed = ['jwt','hash','encode','barcode','ipcalc','datetime','format','crypto','password','passwordhash','uuid','wifiqr','bytes','text'];
+    const allowed = ['jwt','hash','encode','barcode','ipcalc','datetime','format','crypto','password','passwordhash','uuid','wifiqr','units','text'];
     const applyFromHash = () => {
       const raw = window.location.hash.replace(/^#/,'').trim();
       if (allowed.includes(raw)) setActiveTool(raw);
@@ -40,24 +39,29 @@ const App = () => {
   }, []);
 
   return (
-    <div className="h-screen w-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-sans flex flex-col overflow-hidden">
-      <GithubCorner />
+    <div className="h-screen w-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-sans overflow-hidden">
       <Navbar activeTool={activeTool} onSelect={handleSelect} />
-      {activeTool === 'jwt' && <JwtTool />}
-      {activeTool === 'hash' && <HashTool />}
-      {activeTool === 'encode' && <EncodeDecodeTool />}
-      {activeTool === 'barcode' && <BarcodeTool />}
-      {activeTool === 'ipcalc' && <IPCalcTool />}
-      {activeTool === 'datetime' && <DateTimeTool />}
-      {activeTool === 'format' && <DataFormatTool />}
-      {activeTool === 'crypto' && <CryptoTool />}
-      {activeTool === 'password' && <PasswordTool />}
-      {activeTool === 'passwordhash' && <PasswordHashTool />}
-      {activeTool === 'uuid' && <UuidTool />}
-      {activeTool === 'wifiqr' && <WifiQRTool />}
-      {activeTool === 'bytes' && <ByteConverterTool />}
-      {/* Future tools mount based on activeTool */}
-      <DisclaimerFooter />
+      
+      {/* Main content area - offset for sidebar on desktop, top bar on mobile */}
+      <div className="h-full flex flex-col main-content-offset">
+        <div className="flex-1 overflow-auto">
+          {activeTool === 'jwt' && <JwtTool />}
+          {activeTool === 'hash' && <HashTool />}
+          {activeTool === 'encode' && <EncodeDecodeTool />}
+          {activeTool === 'barcode' && <BarcodeTool />}
+          {activeTool === 'ipcalc' && <IPCalcTool />}
+          {activeTool === 'datetime' && <DateTimeTool />}
+          {activeTool === 'format' && <DataFormatTool />}
+          {activeTool === 'crypto' && <CryptoTool />}
+          {activeTool === 'password' && <PasswordTool />}
+          {activeTool === 'passwordhash' && <PasswordHashTool />}
+          {activeTool === 'uuid' && <UuidTool />}
+          {activeTool === 'wifiqr' && <WifiQRTool />}
+          {activeTool === 'units' && <UnitsConverterTool />}
+          {/* Future tools mount based on activeTool */}
+        </div>
+        <DisclaimerFooter />
+      </div>
     </div>
   );
 };

@@ -20,6 +20,10 @@ module.exports = {
         test: /\.css$/i,
         use: ['style-loader', 'css-loader', 'postcss-loader'],
       },
+      {
+        test: /\.(png|jpe?g|gif)$/i,
+        type: 'asset/inline',
+      },
     ],
   },
   resolve: { 
@@ -54,5 +58,9 @@ module.exports = {
   mode: 'production',
   optimization: {
     minimize: true,
+    usedExports: true,
+    sideEffects: true,
+    concatenateModules: true,
+    providedExports: true,
   }
 };

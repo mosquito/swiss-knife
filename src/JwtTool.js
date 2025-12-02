@@ -2,13 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { decodeJWT, signJWT, verifyJWT, generateKeysAsync, isPrivateKey, extractPublicFromPrivateAsync } from './utils';
 import HistoryList from './HistoryList';
 
-const CopyIcon = () => (
-  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-);
-const CheckIcon = () => (
-  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg>
-);
-
 const DEFAULT_HEADER = { alg: 'HS256', typ: 'JWT' };
 const DEFAULT_PAYLOAD = { sub: '1234567890', name: 'John Doe', iat: 1516239022 };
 const ALGORITHMS = ['HS256','HS384','HS512','RS256','RS384','RS512'];
@@ -248,7 +241,7 @@ const JwtTool = () => {
   }, [keyInput]);
 
   return (
-    <div className="flex flex-col md:flex-row overflow-hidden relative flex-1">
+    <div className="flex flex-col md:flex-row overflow-hidden relative flex-1 min-h-0">
       {isGenerating && (
         <div className="absolute inset-0 z-50 bg-black/50 flex items-center justify-center backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg flex items-center gap-4">
@@ -257,20 +250,19 @@ const JwtTool = () => {
           </div>
         </div>
       )}
-      <div className="w-full md:w-1/2 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
-        <div className="p-6 flex flex-col h-full">
+      <div className="w-full md:w-1/2 border-r border-gray-200 dark:border-gray-700 flex flex-col min-h-0">
+        <div className="p-6 flex flex-col flex-1 min-h-0">
           <div className="flex justify-between items-center mb-4 shrink-0">
             <h2 className="text-lg font-bold">Encoded</h2>
             <button onClick={handleCopyToken} disabled={!token} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-[10px] font-bold disabled:opacity-50 disabled:cursor-not-allowed" title="Copy Token">
-              {copiedToken ? <CheckIcon/> : <CopyIcon/>}
               <span>{copiedToken ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
-          <textarea className={`flex-1 w-full p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner text-gray-600 dark:text-gray-300 break-all focus:ring-2 focus:ring-jwtRed focus:border-transparent resize-none font-mono text-base transition-all ${tokenUpdating ? 'ring-2 ring-jwtRed scale-[1.01]' : ''}`} value={token} onChange={(e)=>handleTokenChange(e.target.value)} placeholder="Token will appear here..." spellCheck="false" />
-          <div className={`mt-4 p-3 text-center font-bold rounded ${isVerified ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{isVerified ? 'Signature Verified' : 'Invalid Signature'}</div>
+          <textarea className={`flex-1 w-full p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner text-gray-600 dark:text-gray-300 break-all focus:ring-2 focus:ring-jwtRed focus:border-transparent resize-none font-mono text-base transition-all min-h-0 ${tokenUpdating ? 'ring-2 ring-jwtRed scale-[1.01]' : ''}`} value={token} onChange={(e)=>handleTokenChange(e.target.value)} placeholder="Token will appear here..." spellCheck="false" />
+          <div className={`mt-4 p-3 text-center font-bold rounded shrink-0 ${isVerified ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{isVerified ? 'Signature Verified' : 'Invalid Signature'}</div>
         </div>
       </div>
-      <div className="w-full md:w-1/2 bg-gray-100 dark:bg-gray-900 overflow-y-auto h-full custom-scrollbar">
+      <div className="w-full md:w-1/2 bg-gray-100 dark:bg-gray-900 overflow-y-auto custom-scrollbar min-h-0">
         <div className="p-6">
           <h2 className="text-lg font-bold mb-4">Decoded</h2>
           <div className="mb-6">
@@ -288,7 +280,6 @@ const JwtTool = () => {
               <div className="text-xs text-gray-500 font-bold">HEADER:</div>
               <div className="flex items-center gap-2">
                 <button onClick={handleCopyHeader} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-[10px] font-bold" title="Copy Header">
-                  {copiedHeader ? <CheckIcon/> : <CopyIcon/>}
                   <span>{copiedHeader ? 'Copied' : 'Copy'}</span>
                 </button>
                 {!isEditable && <span className="text-[10px] text-gray-400 font-bold uppercase">Read Only</span>}
@@ -306,11 +297,9 @@ const JwtTool = () => {
               <div className="text-xs text-gray-500 font-bold">PAYLOAD:</div>
               <div className="flex items-center gap-2">
                 <button onClick={() => setShowPayloadHistory(true)} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-[10px] font-bold" title="View History">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                   <span>History</span>
                 </button>
                 <button onClick={handleCopyPayload} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-[10px] font-bold" title="Copy Payload">
-                  {copiedPayload ? <CheckIcon/> : <CopyIcon/>}
                   <span>{copiedPayload ? 'Copied' : 'Copy'}</span>
                 </button>
                 {!isEditable && <span className="text-[10px] text-gray-400 font-bold uppercase">Read Only</span>}
@@ -333,7 +322,12 @@ const JwtTool = () => {
                 </div>
                 {derivedPublicKey && (
                   <div className="w-full xl:w-1/2 bg-gray-200 dark:bg-gray-600/50 border-t xl:border-t-0 xl:border-l border-gray-200 dark:border-gray-600 flex flex-col">
-                    <div className="flex justify-between items-center p-2 border-b border-gray-300 dark:border-gray-500/50 bg-gray-200/50 dark:bg-gray-700/50"><div className="text-[9px] text-gray-500 dark:text-gray-300 uppercase tracking-wider font-bold">Extracted Public Key</div><button onClick={handleCopyPublic} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-blue-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-500" title="Copy Public Key">{isCopied ? <CheckIcon/> : <CopyIcon/>}<span className="text-[9px] font-bold text-gray-700 dark:text-gray-200">{isCopied ? 'Copied' : 'Copy'}</span></button></div>
+                    <div className="flex justify-between items-center p-2 border-b border-gray-300 dark:border-gray-500/50 bg-gray-200/50 dark:bg-gray-700/50">
+                      <div className="text-[9px] text-gray-500 dark:text-gray-300 uppercase tracking-wider font-bold">Extracted Public Key</div>
+                      <button onClick={handleCopyPublic} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-blue-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-500" title="Copy Public Key">
+                        <span className="text-[9px] font-bold text-gray-700 dark:text-gray-200">{isCopied ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
                     <div className="p-3 text-xs text-gray-600 dark:text-gray-300 font-mono break-all whitespace-pre-wrap max-h-48 overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-gray-700/30 flex-1">{derivedPublicKey}</div>
                   </div>
                 )}

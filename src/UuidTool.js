@@ -303,10 +303,10 @@ const UuidTool = () => {
             {onRegenerate && (
               <button
                 onClick={onRegenerate}
-                className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors"
+                className="px-2 py-1 text-xs bg-gray-700 dark:bg-gray-600 hover:bg-gray-800 dark:hover:bg-gray-500 text-white rounded font-medium transition-colors"
                 title="Regenerate this UUID"
               >
-                ↻
+                <span className="icon icon-cycled-arrows"></span>
               </button>
             )}
           </div>
@@ -509,10 +509,10 @@ const UuidTool = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900">
-      <div className="flex-1 overflow-auto p-6 custom-scrollbar">
+    <div className="tool-container">
+      <div className="tool-content">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          <h2 className="tool-title mb-2">
             UUID Generator & Converter
           </h2>
 
@@ -633,7 +633,7 @@ const UuidTool = () => {
             </h3>
             <button
               onClick={generateAll}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              className="px-4 py-2 bg-gray-700 dark:bg-gray-600 hover:bg-gray-800 dark:hover:bg-gray-500 text-white rounded-lg font-medium transition-colors"
             >
               Regenerate All
             </button>

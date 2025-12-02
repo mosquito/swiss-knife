@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import CryptoJS from 'crypto-js';
+import MD5 from 'crypto-js/md5';
+import SHA256 from 'crypto-js/sha256';
+import SHA512 from 'crypto-js/sha512';
+import encHex from 'crypto-js/enc-hex';
 import bcrypt from 'bcryptjs';
 import { blake2bHex, blake2sHex } from 'blakejs';
 import { encodeBase32, encodeBase64, encodeBase85, decodeHex } from './utils';
@@ -34,9 +37,9 @@ const HashTool = () => {
           nextResults[alg] = { hex: hash, base64: '(see hex)', base32: '(see hex)', base85: '(see hex)' };
         } else {
           switch (alg) {
-            case 'MD5': hex = CryptoJS.MD5(text).toString(CryptoJS.enc.Hex); break;
-            case 'SHA-256': hex = CryptoJS.SHA256(text).toString(CryptoJS.enc.Hex); break;
-            case 'SHA-512': hex = CryptoJS.SHA512(text).toString(CryptoJS.enc.Hex); break;
+            case 'MD5': hex = MD5(text).toString(encHex); break;
+            case 'SHA-256': hex = SHA256(text).toString(encHex); break;
+            case 'SHA-512': hex = SHA512(text).toString(encHex); break;
             case 'BLAKE2b': hex = blake2bHex(text); break;
             case 'BLAKE2s': hex = blake2sHex(text); break;
             default: hex = ''; break;
@@ -69,26 +72,26 @@ const HashTool = () => {
   const clearAll = () => { setInput(''); setResults({}); setError(''); };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900">
-      <div className="flex-1 overflow-auto p-6 custom-scrollbar">
-        <h2 className="text-xl font-bold mb-4">Hashes</h2>
+    <div className="tool-container">
+      <div className="tool-content">
+        <h2 className="tool-title">Hashes</h2>
         <p className="text-xs mb-4 text-gray-600 dark:text-gray-400">All operations are local; no data leaves your browser. MD5 is insecure—use only for legacy checks.</p>
         <textarea
           value={input}
           onChange={e=>setInput(e.target.value)}
           placeholder="Type text to hash (auto-computes after 300ms)"
-          className="w-full h-40 p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded font-mono text-sm resize-none focus:ring-2 focus:ring-jwtBlue focus:border-transparent"
+          className="textarea h-40"
           spellCheck="false"
         />
         <div className="mt-3 flex items-center gap-2">
-          <button onClick={clearAll} className="text-xs px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">Clear</button>
+          <button onClick={clearAll} className="btn-secondary btn-sm">Clear</button>
           {isComputing && <span className="text-[10px] font-mono text-jwtBlue animate-pulse">computing...</span>}
         </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3 auto-rows-fr">
+        <div className="mt-4 grid-cards auto-rows-fr">
           {algorithms.map(alg => {
             const r = results[alg];
             return (
-              <div key={alg} className="flex flex-col bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-4">
+              <div key={alg} className="card flex flex-col">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-gray-600 dark:text-gray-300">{alg}</span>
                   {!r && isComputing && <span className="text-[10px] text-gray-400">pending…</span>}

@@ -199,11 +199,10 @@ const PasswordHashTool = () => {
   const selectedType = HASH_TYPES.find(t => t.value === hashType);
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900">
+    <div className="tool-container">
       <Base64QuerySync value={hashType} setValue={setHashType} />
-      <div className="flex-1 overflow-auto p-6 custom-scrollbar">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <h2 className="text-xl font-bold">Password Hash Generator</h2>
+      <div className="tool-content">
+          <h2 className="tool-title">Password Hash Generator</h2>
           <p className="text-xs text-gray-600 dark:text-gray-400">
             Generate password hashes for Linux /etc/shadow, htpasswd, PostgreSQL, and other systems.
             All operations are client-side using Web Crypto API where supported.
@@ -224,10 +223,11 @@ const PasswordHashTool = () => {
                 />
                 <button
                   onClick={regeneratePassword}
-                  className="px-3 py-2 text-sm rounded bg-jwtPurple text-white font-semibold hover:opacity-90 whitespace-nowrap"
+                  className="px-3 py-2 text-sm rounded bg-gray-700 dark:bg-gray-600 text-white font-semibold hover:bg-gray-800 dark:hover:bg-gray-500 whitespace-nowrap flex items-center gap-1"
                   title="Generate new random password"
                 >
-                  🔄 New
+                  <span className="icon icon-cycled-arrows"></span>
+                  <span>New</span>
                 </button>
               </div>
             </div>
@@ -326,14 +326,14 @@ const PasswordHashTool = () => {
               <button
                 onClick={computeHash}
                 disabled={computing}
-                className="px-4 py-2 text-sm rounded bg-jwtBlue text-white font-semibold hover:opacity-90 disabled:opacity-50"
+                className="px-4 py-2 text-sm rounded bg-gray-700 dark:bg-gray-600 text-white font-semibold hover:bg-gray-800 dark:hover:bg-gray-500 disabled:opacity-50"
               >
                 {computing ? 'Computing...' : 'Generate Hash'}
               </button>
               <button
                 onClick={() => handleCopy(output)}
                 disabled={!output}
-                className="px-4 py-2 text-sm rounded bg-jwtPurple text-white font-semibold hover:opacity-90 disabled:opacity-50"
+                className="px-4 py-2 text-sm rounded bg-gray-700 dark:bg-gray-600 text-white font-semibold hover:bg-gray-800 dark:hover:bg-gray-500 disabled:opacity-50"
               >
                 Copy Hash
               </button>
@@ -430,7 +430,6 @@ const PasswordHashTool = () => {
               )}
             </div>
           </div>
-        </div>
       </div>
     </div>
   );

@@ -512,15 +512,15 @@ const IPCalcTool = () => {
     try {
       const testIpObj = parseIp(checkIp.trim());
       if (result.ipObj.constructor !== testIpObj.constructor) {
-        setCheckResult('❌ IP version mismatch');
+        setCheckResult(<><span className="icon icon-cancel"></span> IP version mismatch</>);
         return;
       }
       const isIn =
         testIpObj.address >= result.ipObj.networkAddress.address &&
         testIpObj.address <= result.ipObj.broadcastAddress.address;
-      setCheckResult(isIn ? `✅ ${checkIp.trim()} is in the subnet` : `❌ ${checkIp.trim()} is not in the subnet`);
+      setCheckResult(isIn ? <><span className="icon icon-ok"></span> {checkIp.trim()} is in the subnet</> : <><span className="icon icon-cancel"></span> {checkIp.trim()} is not in the subnet</>);
     } catch (e) {
-      setCheckResult('❌ ' + e.message);
+      setCheckResult(<><span className="icon icon-cancel"></span> {e.message}</>);
     }
   };
 
@@ -533,9 +533,9 @@ const IPCalcTool = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900">
+    <div className="tool-container">
       {/* Constrain width on wide screens */}
-      <div className="flex-1 overflow-auto p-6 space-y-4 custom-scrollbar max-w-4xl mx-auto">
+      <div className="tool-content">
         {/* Sync IP input with base64 URL query param */}
         <Base64QuerySync
           value={input}
@@ -553,7 +553,7 @@ const IPCalcTool = () => {
           queryParam="ip"
           updateOnMount={true}
         />
-        <h2 className="text-xl font-bold">IP Calculator</h2>
+        <h2 className="tool-title">IP Calculator</h2>
         <p className="text-xs text-gray-600 dark:text-gray-400">
           Calculate IPv4 and IPv6 network information. Supports CIDR notation, default prefix lengths (/24 for IPv4, /64
           for IPv6).
@@ -583,7 +583,7 @@ const IPCalcTool = () => {
         </div>
 
         {result && (
-          <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-4">
+          <div className="card">
             <table className="w-full text-xs font-mono">
               <tbody>
                 {[
@@ -697,7 +697,7 @@ const IPCalcTool = () => {
                 />
                 <button
                   onClick={handleCheckIp}
-                  className="px-3 py-1 rounded bg-jwtBlue text-white text-xs font-semibold hover:opacity-90"
+                  className="btn-primary btn-sm"
                 >
                   Check
                 </button>
@@ -733,7 +733,7 @@ const IPCalcTool = () => {
                         onClick={() => { setInput(it.value); restore(it.value, idx); }}
                         className="text-xs px-1 rounded opacity-0 group-hover:opacity-100 transition"
                       >
-                        ♻️
+                        <span className="icon icon-ok"></span>
                       </button>
                       <button
                         onClick={() => { setInput(it.value); restore(it.value, idx); }}
@@ -747,7 +747,7 @@ const IPCalcTool = () => {
                         onClick={() => deleteAt(idx)}
                         className="text-xs px-1 rounded opacity-0 group-hover:opacity-100 hover:bg-red-200 dark:hover:bg-red-800/60 transition"
                       >
-                        ❌
+                        <span className="icon icon-cancel"></span>
                       </button>
                     </div>
                   ))}

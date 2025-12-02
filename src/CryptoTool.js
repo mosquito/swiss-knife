@@ -183,10 +183,9 @@ const CryptoTool = () => {
   const clearAes = () => { setAesInput(''); setAesOutput(''); setAesError(''); };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900">
-      <div className="flex-1 overflow-auto p-6 custom-scrollbar">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <h2 className="text-xl font-bold">Crypto Utils</h2>
+    <div className="tool-container">
+      <div className="tool-content">
+          <h2 className="tool-title">Crypto Utils</h2>
           <p className="text-xs text-gray-600 dark:text-gray-400">
             Client-side cryptographic operations using Web Crypto API. All operations execute in-browser with no server transmission. Keys are ephemeral unless explicitly exported.
           </p>
@@ -203,8 +202,8 @@ const CryptoTool = () => {
             {showKeys && (
               <div className="p-3 space-y-2">
                 <div className="flex gap-2 mb-1">
-                  <button disabled={rsaGenBusy} onClick={generateKeyPair} className="text-[10px] px-2 py-1 rounded bg-jwtBlue text-white disabled:opacity-50">{rsaGenBusy ? 'Generating…' : 'Generate Pair'}</button>
-                  <button onClick={clearRsa} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Clear Sig</button>
+                  <button disabled={rsaGenBusy} onClick={generateKeyPair} className="btn-primary btn-sm disabled:opacity-50">{rsaGenBusy ? 'Generating…' : 'Generate Pair'}</button>
+                  <button onClick={clearRsa} className="btn-secondary btn-sm">Clear Sig</button>
                 </div>
                 <textarea value={rsaPrivate} onChange={e=>setRsaPrivate(e.target.value)} spellCheck="false" placeholder="PRIVATE KEY (PKCS#8)" className="w-full h-28 p-2 font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded resize-none focus:outline-none" />
                 <textarea value={rsaPublic} onChange={e=>setRsaPublic(e.target.value)} spellCheck="false" placeholder="PUBLIC KEY" className="w-full h-28 p-2 font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded resize-none focus:outline-none" />
@@ -222,8 +221,8 @@ const CryptoTool = () => {
                   </select>
                 </label>
                 {isPrivateKey(rsaPrivate) && <button onClick={signMessage} className="px-3 py-1 rounded bg-green-500 text-white font-semibold hover:opacity-90">Sign</button>}
-                <button onClick={verifySignature} className="px-3 py-1 rounded bg-jwtPurple text-white font-semibold hover:opacity-90">Verify</button>
-                <button onClick={()=>handleCopy(rsaSignature)} className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:opacity-90">Copy Sig</button>
+                <button onClick={verifySignature} className="btn-primary btn-sm">Verify</button>
+                <button onClick={()=>handleCopy(rsaSignature)} className="btn-secondary btn-sm">Copy Sig</button>
                 {rsaError && <span className="px-2 py-1 rounded bg-red-100 text-red-600 font-semibold">Error</span>}
                 {!rsaError && rsaResult && (
                   <span className={`px-2 py-1 rounded font-semibold ${rsaResult.includes('VALID') ? 'bg-green-100 text-green-700' : rsaResult.includes('INVALID') ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-600'}`}>{rsaResult.replace('Signature ','')}</span>
@@ -246,9 +245,9 @@ const CryptoTool = () => {
                 </select>
               </label>
               <input type="text" value={aesPass} onChange={e=>setAesPass(e.target.value)} placeholder="Passphrase" className="px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-xs" />
-              <button onClick={runAes} className="px-3 py-1 rounded bg-jwtBlue text-white font-semibold hover:opacity-90">Run</button>
-              <button onClick={clearAes} className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:opacity-90">Clear</button>
-              <button onClick={()=>handleCopy(aesOutput)} className="px-3 py-1 rounded bg-jwtPurple text-white hover:opacity-90">Copy Output</button>
+              <button onClick={runAes} className="btn-primary btn-sm">Run</button>
+              <button onClick={clearAes} className="btn-secondary btn-sm">Clear</button>
+              <button onClick={()=>handleCopy(aesOutput)} className="btn-primary btn-sm">Copy Output</button>
               {aesError && <span className="px-2 py-1 rounded bg-red-100 text-red-600 font-semibold">Error</span>}
               {!aesError && aesOutput && <span className="px-2 py-1 rounded bg-green-100 text-green-700 font-semibold">Done</span>}
             </div>
@@ -256,7 +255,6 @@ const CryptoTool = () => {
             <textarea value={aesOutput} readOnly spellCheck="false" placeholder={aesMode==='encrypt'? 'salt:iv:cipher output here' : 'Decrypted plaintext'} className="w-full h-28 p-2 font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded resize-none focus:outline-none" />
             <div className="text-[10px] text-gray-500 dark:text-gray-400 font-mono">Output format: base64(salt):base64(iv):base64(ciphertext)</div>
           </div>
-        </div>
         </div>
       </div>
     </div>

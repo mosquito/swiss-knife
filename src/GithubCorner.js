@@ -5,14 +5,14 @@ const GithubCorner = ({ repo = 'https://github.com/mosquito/swiss-knife' }) => (
     href={repo}
     target="_blank"
     rel="noopener noreferrer"
-    className="github-corner fixed top-0 left-0 z-50 md:z-50 pointer-events-none"
+    className="github-corner fixed top-0 left-0 z-50 pointer-events-none lg:left-64"
     aria-label="View source on GitHub"
   >
     <svg
       width="50"
       height="50"
       viewBox="0 0 250 250"
-      className="fill-gray-800 dark:fill-gray-200 text-white dark:text-gray-800 md:w-20 md:h-20"
+      className="fill-gray-800 dark:fill-gray-200 text-white dark:text-gray-800 lg:w-20 lg:h-20"
       aria-hidden="true"
       style={{ transform: 'scaleX(-1)' }}
     >
