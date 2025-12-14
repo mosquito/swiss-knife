@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import Base64QuerySync from './Base64QuerySync';
 import bwipjs from 'bwip-js';
 import HistoryList from './HistoryList';
@@ -125,35 +126,39 @@ const BarcodeTool = () => {
     } catch {}
   }, []);
 
-  // Fallback priority (runs once after potential param decode): history > example
+  // Fallback priority (runs once after potential param decode): example
   useEffect(() => {
     if (initialLoadDone) return;
     
-    // Check if there's a URL param to decode first
     const url = new URL(window.location.href);
     const raw = url.searchParams.get('barcode');
+    let validParam = false;
+
     if (raw) {
-      // Let Base64QuerySync handle it
-      setInitialLoadDone(true);
+      try {
+        const decodedStr = atob(raw);
+        const parsed = JSON.parse(decodedStr);
+        if (parsed && typeof parsed === 'object' && typeof parsed.text === 'string' && typeof parsed.type === 'string') {
+           if (SYMS.some(sym => sym.value === parsed.type)) {
+             validParam = true;
+           }
+        }
+      } catch {}
+    }
+
+    if (validParam) {
+      // Let Base64QuerySync handle it via onDecoded
       return;
     }
     
-    // No URL param - try history
-    try {
-      const historyRaw = localStorage.getItem(HISTORY_KEY);
-      if (historyRaw) {
-        const items = JSON.parse(historyRaw);
-        if (Array.isArray(items) && items.length > 0) {
-          setType(items[0].value.type);
-          setText(items[0].value.text);
-          setInitialLoadDone(true);
-          return;
-        }
+    // No URL param OR invalid param - use first example as default
+    if (SYMS.length > 0) {
+      const first = SYMS[0];
+      setType(first.value);
+      if (first.examples && first.examples.length > 0) {
+        setText(first.examples[0].value);
       }
-    } catch {}
-    // Example default
-    setType('ean13');
-    setText('123456789012');
+    }
     setInitialLoadDone(true);
   }, [initialLoadDone]);
 
@@ -350,8 +355,16 @@ const BarcodeTool = () => {
             return undefined; // incompatible
           }}
           onDecoded={(parsed) => {
-            setType(parsed.type);
-            setText(parsed.text);
+            let { type, text } = parsed;
+            // If text is empty, use example for that type
+            if (!text) {
+               const sym = SYMS.find(s => s.value === type);
+               if (sym && sym.examples && sym.examples.length > 0) {
+                 text = sym.examples[0].value;
+               }
+            }
+            setType(type);
+            setText(text);
             setParamDecoded(true);
             setInitialLoadDone(true);
           }}
@@ -364,11 +377,13 @@ const BarcodeTool = () => {
           <div className="flex flex-col gap-3">
             <div>
               <label className="label">Barcode Content</label>
-              <textarea
+              <TextareaWithLineNumbers
                 value={text}
                 onChange={(e)=>setText(e.target.value)}
                 placeholder="Enter content (digits/text depending on type)"
-                className="textarea input-xs h-20"
+                className="w-full h-20 flex font-mono text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded overflow-hidden focus-within:ring-2 focus-within:ring-jwtBlue text-gray-900 dark:text-gray-100"
+                gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-3 min-w-[2.5rem]"
+                textareaClassName="bg-transparent p-3 border-none w-full h-full outline-none"
                 spellCheck="false"
                 rows={3}
               />
@@ -405,24 +420,25 @@ const BarcodeTool = () => {
                             <button
                               key={sym.value}
                               onClick={() => {
-                                if (sym.compatible) {
-                                  setType(sym.value);
-                                  setDropdownOpen(false);
-                                  setFilter('');
+                                setType(sym.value);
+                                if (!sym.compatible) {
+                                  // If incompatible with current text, prefill with first example
+                                  if (sym.examples && sym.examples.length > 0) {
+                                    setText(sym.examples[0].value);
+                                  }
                                 }
+                                setDropdownOpen(false);
+                                setFilter('');
                               }}
-                              disabled={!sym.compatible}
-                              className={`w-full text-left px-3 py-2 text-xs transition ${
-                                !sym.compatible 
-                                  ? 'opacity-40 cursor-not-allowed text-gray-400 dark:text-gray-600' 
-                                  : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                              } ${
+                              className={`w-full text-left px-3 py-2 text-xs transition hover:bg-gray-100 dark:hover:bg-gray-700 ${
                                 type === sym.value ? 'bg-jwtBlue/10 dark:bg-jwtBlue/20 font-semibold' : ''
+                              } ${
+                                !sym.compatible ? 'text-gray-500 dark:text-gray-400 italic' : ''
                               }`}
-                              title={!sym.compatible ? 'Input not compatible with this barcode type' : sym.label}
+                              title={!sym.compatible ? 'Current text incompatible - will reset to example' : sym.label}
                             >
                               {sym.label}
-                              {!sym.compatible && <span className="ml-1 text-[9px]">✗</span>}
+                              {!sym.compatible && <span className="ml-1 text-[9px] opacity-70">(reset)</span>}
                             </button>
                           ))}
                         </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import { encodeBase32, decodeBase32, encodeBase64, decodeBase64, encodeBase85, decodeBase85, encodeHex, decodeHex } from './utils';
 
 // Encode / Decode utility supporting: Base64, Base32, Hex, URL
@@ -103,23 +104,27 @@ const EncodeDecodeTool = () => {
               <span>Input ({mode === 'encode' ? 'raw text' : 'encoded text'})</span>
               <button onClick={()=>handleCopy(input)} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>
             </div>
-            <textarea
+            <TextareaWithLineNumbers
               value={input}
               onChange={e=>setInput(e.target.value)}
               spellCheck="false"
               placeholder={mode==='encode'? 'Type text to encode' : 'Paste encoded text to decode'}
-              className="flex-1 p-3 font-mono text-[11px] bg-transparent resize-none focus:outline-none min-h-0"
+              className="flex-1 font-mono text-[11px] bg-transparent min-h-0"
+              gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-3 min-w-[2.5rem]"
+              textareaClassName="bg-transparent p-3 border-none w-full h-full"
             />
           </div>
           <div className="flex flex-col bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded h-[55vh] md:h-[60vh] min-h-0">
             <div className="px-3 py-2 text-[11px] font-bold border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 flex items-center justify-between">
               <span>Output ({mode === 'encode' ? 'encoded text' : 'decoded text'})</span>
             </div>
-            <textarea
+            <TextareaWithLineNumbers
               value={output}
               readOnly
               spellCheck="false"
-              className="flex-1 p-3 font-mono text-[11px] bg-transparent resize-none focus:outline-none min-h-0"
+              className="flex-1 font-mono text-[11px] bg-transparent min-h-0"
+              gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-3 min-w-[2.5rem]"
+              textareaClassName="bg-transparent p-3 border-none w-full h-full"
             />
             {error && <div className="px-3 py-1 text-[10px] text-red-600 border-t border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 font-mono">{error}</div>}
           </div>

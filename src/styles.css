@@ -126,6 +126,9 @@
   .github-corner .octo-arm {
     animation: octocat-wave 560ms ease-in-out;
   }
+  .line-numbers-gutter {
+    display: none;
+  }
 }
 
 textarea {

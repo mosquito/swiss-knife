@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import { generateKeysAsync, extractPublicFromPrivateAsync, isPrivateKey } from './utils';
 
 const textEncoder = new TextEncoder();
@@ -205,14 +206,14 @@ const CryptoTool = () => {
                   <button disabled={rsaGenBusy} onClick={generateKeyPair} className="btn-primary btn-sm disabled:opacity-50">{rsaGenBusy ? 'Generating…' : 'Generate Pair'}</button>
                   <button onClick={clearRsa} className="btn-secondary btn-sm">Clear Sig</button>
                 </div>
-                <textarea value={rsaPrivate} onChange={e=>setRsaPrivate(e.target.value)} spellCheck="false" placeholder="PRIVATE KEY (PKCS#8)" className="w-full h-28 p-2 font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded resize-none focus:outline-none" />
-                <textarea value={rsaPublic} onChange={e=>setRsaPublic(e.target.value)} spellCheck="false" placeholder="PUBLIC KEY" className="w-full h-28 p-2 font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded resize-none focus:outline-none" />
+                <TextareaWithLineNumbers value={rsaPrivate} onChange={e=>setRsaPrivate(e.target.value)} spellCheck="false" placeholder="PRIVATE KEY (PKCS#8)" className="w-full h-28 flex font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded overflow-hidden" gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-2 min-w-[2.5rem]" textareaClassName="bg-transparent p-2 border-none w-full h-full outline-none" />
+                <TextareaWithLineNumbers value={rsaPublic} onChange={e=>setRsaPublic(e.target.value)} spellCheck="false" placeholder="PUBLIC KEY" className="w-full h-28 flex font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded overflow-hidden" gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-2 min-w-[2.5rem]" textareaClassName="bg-transparent p-2 border-none w-full h-full outline-none" />
                 {rsaDerivedStatus && <div className="text-[10px] text-gray-500 dark:text-gray-400">{rsaDerivedStatus}</div>}
               </div>
             )}
             <div className="p-3 space-y-3">
-              <textarea value={rsaMessage} onChange={e=>setRsaMessage(e.target.value)} spellCheck="false" placeholder="Message to sign / verify" className="w-full h-24 p-2 font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded resize-none focus:outline-none" />
-              <textarea value={rsaSignature} onChange={e=>setRsaSignature(e.target.value)} spellCheck="false" placeholder="Base64 signature" className="w-full h-24 p-2 font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded resize-none focus:outline-none" />
+              <TextareaWithLineNumbers value={rsaMessage} onChange={e=>setRsaMessage(e.target.value)} spellCheck="false" placeholder="Message to sign / verify" className="w-full h-24 flex font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded overflow-hidden" gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-2 min-w-[2.5rem]" textareaClassName="bg-transparent p-2 border-none w-full h-full outline-none" />
+              <TextareaWithLineNumbers value={rsaSignature} onChange={e=>setRsaSignature(e.target.value)} spellCheck="false" placeholder="Base64 signature" className="w-full h-24 flex font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded overflow-hidden" gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-2 min-w-[2.5rem]" textareaClassName="bg-transparent p-2 border-none w-full h-full outline-none" />
               <div className="flex flex-wrap items-center gap-2 text-[11px]">
                 <label className="flex items-center gap-1">Alg:
                   <select value={rsaAlg} onChange={e=>setRsaAlg(e.target.value)} className="px-2 py-1 rounded bg-gray-200 dark:bg-gray-700">
@@ -251,8 +252,8 @@ const CryptoTool = () => {
               {aesError && <span className="px-2 py-1 rounded bg-red-100 text-red-600 font-semibold">Error</span>}
               {!aesError && aesOutput && <span className="px-2 py-1 rounded bg-green-100 text-green-700 font-semibold">Done</span>}
             </div>
-            <textarea value={aesInput} onChange={e=>setAesInput(e.target.value)} spellCheck="false" placeholder={aesMode==='encrypt'? 'Plaintext to encrypt' : 'salt:iv:cipher'} className="w-full h-28 p-2 font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded resize-none focus:outline-none" />
-            <textarea value={aesOutput} readOnly spellCheck="false" placeholder={aesMode==='encrypt'? 'salt:iv:cipher output here' : 'Decrypted plaintext'} className="w-full h-28 p-2 font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded resize-none focus:outline-none" />
+            <TextareaWithLineNumbers value={aesInput} onChange={e=>setAesInput(e.target.value)} spellCheck="false" placeholder={aesMode==='encrypt'? 'Plaintext to encrypt' : 'salt:iv:cipher'} className="w-full h-28 flex font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded overflow-hidden" gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-2 min-w-[2.5rem]" textareaClassName="bg-transparent p-2 border-none w-full h-full outline-none" />
+            <TextareaWithLineNumbers value={aesOutput} readOnly spellCheck="false" placeholder={aesMode==='encrypt'? 'salt:iv:cipher output here' : 'Decrypted plaintext'} className="w-full h-28 flex font-mono text-[11px] bg-transparent border border-gray-200 dark:border-gray-700 rounded overflow-hidden" gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-2 min-w-[2.5rem]" textareaClassName="bg-transparent p-2 border-none w-full h-full outline-none" />
             <div className="text-[10px] text-gray-500 dark:text-gray-400 font-mono">Output format: base64(salt):base64(iv):base64(ciphertext)</div>
           </div>
         </div>

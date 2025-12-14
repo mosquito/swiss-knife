@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import { ShortUUID } from './shortuuid';
 import { encodeBase32, encodeBase64, encodeBase85 } from './utils';
 import { 
@@ -527,12 +528,14 @@ const UuidTool = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   UUID (Long)
                 </label>
-                <textarea
+                <TextareaWithLineNumbers
                   value={converterUuid}
                   onChange={(e) => handleConverterUuidChange(e.target.value)}
                   placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                   spellCheck="false"
-                  className="w-full h-20 px-3 py-2 font-mono text-sm bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+                  className="w-full h-20 flex font-mono text-sm bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 text-gray-900 dark:text-white"
+                  gutterClassName="bg-gray-100 dark:bg-gray-800 text-gray-400 border-r border-gray-200 dark:border-gray-700 py-2 px-2 min-w-[2.5rem]"
+                  textareaClassName="bg-transparent px-3 py-2 border-none w-full h-full outline-none"
                 />
               </div>
               
@@ -540,12 +543,14 @@ const UuidTool = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   ShortUUID
                 </label>
-                <textarea
+                <TextareaWithLineNumbers
                   value={converterShort}
                   onChange={(e) => handleConverterShortChange(e.target.value)}
                   placeholder="Short representation"
                   spellCheck="false"
-                  className="w-full h-20 px-3 py-2 font-mono text-sm bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+                  className="w-full h-20 flex font-mono text-sm bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 text-gray-900 dark:text-white"
+                  gutterClassName="bg-gray-100 dark:bg-gray-800 text-gray-400 border-r border-gray-200 dark:border-gray-700 py-2 px-2 min-w-[2.5rem]"
+                  textareaClassName="bg-transparent px-3 py-2 border-none w-full h-full outline-none"
                 />
               </div>
             </div>

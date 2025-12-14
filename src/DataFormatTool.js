@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import YAML from 'yaml';
 
 // Two-pane JSON/YAML/TOML converter (bidirectional). Browser-only.
@@ -349,11 +350,13 @@ const DataFormatTool = () => {
               </div>
               <button onClick={()=>copyToClipboard(leftText)} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>
             </div>
-            <textarea
+            <TextareaWithLineNumbers
               value={leftText}
               onChange={handleLeftChange}
               spellCheck="false"
-              className="flex-1 p-3 font-mono text-[11px] bg-transparent resize-none focus:outline-none min-h-0"
+              className="flex-1 font-mono text-[11px] bg-transparent min-h-0"
+              gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-3 min-w-[2.5rem]"
+              textareaClassName="bg-transparent p-3 border-none w-full h-full"
             />
             {errorLeft && <div className="px-3 py-1 text-[10px] text-red-600 border-t border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 font-mono">{errorLeft}</div>}
           </div>
@@ -372,11 +375,13 @@ const DataFormatTool = () => {
               </div>
               <button onClick={()=>copyToClipboard(rightText)} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>
             </div>
-            <textarea
+            <TextareaWithLineNumbers
               value={rightText}
               onChange={handleRightChange}
               spellCheck="false"
-              className="flex-1 p-3 font-mono text-[11px] bg-transparent resize-none focus:outline-none min-h-0"
+              className="flex-1 font-mono text-[11px] bg-transparent min-h-0"
+              gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-3 min-w-[2.5rem]"
+              textareaClassName="bg-transparent p-3 border-none w-full h-full"
             />
             {errorRight && <div className="px-3 py-1 text-[10px] text-red-600 border-t border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 font-mono">{errorRight}</div>}
           </div>

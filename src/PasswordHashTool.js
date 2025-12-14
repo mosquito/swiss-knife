@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import bcrypt from 'bcryptjs';
 import { encodeBase64, decodeBase64, encodeCrypt64, generateSalt, generatePassword } from './utils';
 import { passwordDictionary } from './passwordDictionary';
@@ -356,10 +357,12 @@ const PasswordHashTool = () => {
                 <label className="text-xs font-bold text-gray-600 dark:text-gray-400 block mb-1">
                   Generated Hash
                 </label>
-                <textarea
+                <TextareaWithLineNumbers
                   value={output}
                   readOnly
-                  className="w-full h-32 px-3 py-2 text-xs font-mono bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded resize-none focus:outline-none"
+                  className="w-full h-32 flex text-xs font-mono bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded overflow-hidden"
+                  gutterClassName="bg-gray-100 dark:bg-gray-800 text-gray-400 border-r border-gray-200 dark:border-gray-700 py-2 px-2 min-w-[2.5rem]"
+                  textareaClassName="bg-transparent px-3 py-2 border-none w-full h-full outline-none"
                   onClick={(e) => e.target.select()}
                 />
               </div>

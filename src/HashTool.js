@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import MD5 from 'crypto-js/md5';
 import SHA256 from 'crypto-js/sha256';
 import SHA512 from 'crypto-js/sha512';
@@ -76,11 +77,13 @@ const HashTool = () => {
       <div className="tool-content">
         <h2 className="tool-title">Hashes</h2>
         <p className="text-xs mb-4 text-gray-600 dark:text-gray-400">All operations are local; no data leaves your browser. MD5 is insecure—use only for legacy checks.</p>
-        <textarea
+        <TextareaWithLineNumbers
           value={input}
           onChange={e=>setInput(e.target.value)}
           placeholder="Type text to hash (auto-computes after 300ms)"
-          className="textarea h-40"
+          className="w-full flex font-mono text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded overflow-hidden focus-within:ring-2 focus-within:ring-jwtBlue h-40"
+          gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-3 min-w-[2.5rem]"
+          textareaClassName="bg-transparent p-3 border-none w-full h-full outline-none"
           spellCheck="false"
         />
         <div className="mt-3 flex items-center gap-2">

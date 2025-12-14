@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import { decodeJWT, signJWT, verifyJWT, generateKeysAsync, isPrivateKey, extractPublicFromPrivateAsync } from './utils';
 import HistoryList from './HistoryList';
 
@@ -258,7 +259,7 @@ const JwtTool = () => {
               <span>{copiedToken ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
-          <textarea className={`flex-1 w-full p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner text-gray-600 dark:text-gray-300 break-all focus:ring-2 focus:ring-jwtRed focus:border-transparent resize-none font-mono text-base transition-all min-h-0 ${tokenUpdating ? 'ring-2 ring-jwtRed scale-[1.01]' : ''}`} value={token} onChange={(e)=>handleTokenChange(e.target.value)} placeholder="Token will appear here..." spellCheck="false" />
+          <TextareaWithLineNumbers className={`flex-1 w-full flex bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner text-gray-600 dark:text-gray-300 break-all focus-within:ring-2 focus-within:ring-jwtRed focus-within:border-transparent font-mono text-base transition-all min-h-0 overflow-hidden ${tokenUpdating ? 'ring-2 ring-jwtRed scale-[1.01]' : ''}`} gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-4 min-w-[2.5rem]" textareaClassName="bg-transparent p-4 border-none w-full h-full outline-none break-all" value={token} onChange={(e)=>handleTokenChange(e.target.value)} placeholder="Token will appear here..." spellCheck="false" />
           <div className={`mt-4 p-3 text-center font-bold rounded shrink-0 ${isVerified ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{isVerified ? 'Signature Verified' : 'Invalid Signature'}</div>
         </div>
       </div>
@@ -285,7 +286,7 @@ const JwtTool = () => {
                 {!isEditable && <span className="text-[10px] text-gray-400 font-bold uppercase">Read Only</span>}
               </div>
             </div>
-            <textarea readOnly={!isEditable} className={`w-full h-24 bg-white dark:bg-gray-800 border-l-4 border-jwtRed rounded shadow-sm text-jwtRed font-mono text-sm resize-none ${!isEditable ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`} value={headerText} onChange={(e)=>handleJsonTextChange('header', e.target.value)} onBlur={()=>handleJsonBlur('header')} spellCheck="false" />
+            <TextareaWithLineNumbers readOnly={!isEditable} className={`w-full h-24 flex bg-white dark:bg-gray-800 border-l-4 border-jwtRed rounded shadow-sm text-jwtRed font-mono text-sm overflow-hidden ${!isEditable ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`} gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-2 min-w-[2.5rem]" textareaClassName="bg-transparent p-2 border-none w-full h-full outline-none" value={headerText} onChange={(e)=>handleJsonTextChange('header', e.target.value)} onBlur={()=>handleJsonBlur('header')} spellCheck="false" />
             {decodeResult.headerError && (
               <div className="mt-1 text-xs text-red-600 dark:text-red-400 font-bold">
                 ⚠ {decodeResult.headerError}
@@ -305,7 +306,7 @@ const JwtTool = () => {
                 {!isEditable && <span className="text-[10px] text-gray-400 font-bold uppercase">Read Only</span>}
               </div>
             </div>
-            <textarea readOnly={!isEditable} className={`w-full h-48 bg-white dark:bg-gray-800 border-l-4 border-jwtPurple rounded shadow-sm text-jwtPurple font-mono text-sm resize-none ${!isEditable ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`} value={payloadText} onChange={(e)=>handleJsonTextChange('payload', e.target.value)} onBlur={()=>handleJsonBlur('payload')} spellCheck="false" />
+            <TextareaWithLineNumbers readOnly={!isEditable} className={`w-full h-48 flex bg-white dark:bg-gray-800 border-l-4 border-jwtPurple rounded shadow-sm text-jwtPurple font-mono text-sm overflow-hidden ${!isEditable ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`} gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-2 min-w-[2.5rem]" textareaClassName="bg-transparent p-2 border-none w-full h-full outline-none" value={payloadText} onChange={(e)=>handleJsonTextChange('payload', e.target.value)} onBlur={()=>handleJsonBlur('payload')} spellCheck="false" />
             {decodeResult.payloadError && (
               <div className="mt-1 text-xs text-red-600 dark:text-red-400 font-bold">
                 ⚠ {decodeResult.payloadError}
@@ -318,7 +319,7 @@ const JwtTool = () => {
               <div className="text-jwtBlue mb-4 select-none">{currentAlg} (<br/>base64UrlEncode(header)+'.'+base64UrlEncode(payload),<br/><span className="text-gray-500 dark:text-gray-400">{isHmac ? 'your-256-bit-secret' : 'your-private-or-public-key'}</span><br/>)</div>
               <div className={`flex flex-col ${derivedPublicKey ? 'xl:flex-row' : ''} w-full bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 overflow-hidden`}>
                 <div className={`relative ${derivedPublicKey ? 'w-full xl:w-1/2' : 'w-full'}`}>
-                  <textarea rows={derivedPublicKey ? 6 : 4} value={keyInput} onChange={(e)=>setKeyInput(e.target.value)} placeholder={isHmac ? 'Enter your secret here' : '-----BEGIN PRIVATE OR PUBLIC KEY-----'} className="w-full h-full bg-transparent p-3 text-black dark:text-white focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:ring-2 focus:ring-jwtBlue font-mono text-xs resize-y" spellCheck="false" />
+                  <TextareaWithLineNumbers rows={derivedPublicKey ? 6 : 4} value={keyInput} onChange={(e)=>setKeyInput(e.target.value)} placeholder={isHmac ? 'Enter your secret here' : '-----BEGIN PRIVATE OR PUBLIC KEY-----'} className="w-full h-full flex bg-transparent text-black dark:text-white focus-within:bg-white dark:focus-within:bg-gray-800 focus-within:ring-2 focus-within:ring-jwtBlue font-mono text-xs overflow-hidden" gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-3 min-w-[2.5rem]" textareaClassName="bg-transparent p-3 border-none w-full h-full outline-none" spellCheck="false" />
                 </div>
                 {derivedPublicKey && (
                   <div className="w-full xl:w-1/2 bg-gray-200 dark:bg-gray-600/50 border-t xl:border-t-0 xl:border-l border-gray-200 dark:border-gray-600 flex flex-col">
