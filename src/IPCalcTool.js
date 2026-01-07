@@ -317,7 +317,7 @@ const IPCalcTool = () => {
   const [checkResult, setCheckResult] = useState('');
   const [nat64PrefixInput, setNat64PrefixInput] = useState('64:ff9b::/96');
   const debounceRef = useRef(null);
-  const [historyItems, setHistoryItems] = useState([]);
+  const historyAddRef = useRef(null);
   const [copiedField, setCopiedField] = useState('');
   const [hoveredField, setHoveredField] = useState('');
   const paramDecodedRef = useRef(false);
@@ -359,6 +359,7 @@ const IPCalcTool = () => {
   }, [paramChecked, paramDecoded]);
 
   const calculate = () => {
+    let success = false;
     try {
       const ipObj = parseIp(input.trim());
       
@@ -400,9 +401,16 @@ const IPCalcTool = () => {
         ipObj, // keep reference for subnet check
       });
       setError('');
+      success = true;
     } catch (e) {
       setError(e.message || 'Invalid input');
       setResult(null);
+    }
+    
+    // Save to history only after successful validation
+    const willSave = success && paramChecked && input.trim() && historyAddRef.current;
+    if (willSave) {
+      historyAddRef.current(input.trim());
     }
   };
 
@@ -707,8 +715,10 @@ const IPCalcTool = () => {
           </div>
         )}
 
-        <HistoryList storageKey="ipcalc_history_v1" newItem={input} dedupeKey={(v) => v}>
-          {({ items, clear, deleteAt, restore }) => (
+        <HistoryList storageKey="ipcalc_history_v1" newItem={null} dedupeKey={(v) => v}>
+          {({ items, clear, deleteAt, restore, add }) => {
+            historyAddRef.current = add;
+            return (
             <div className="mt-6 w-full">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-xs font-bold text-gray-600 dark:text-gray-400">Calculation History</div>
@@ -754,7 +764,8 @@ const IPCalcTool = () => {
                 </div>
               )}
             </div>
-          )}
+          );
+          }}
         </HistoryList>
       </div>
     </div>

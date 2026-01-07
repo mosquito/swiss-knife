@@ -21,10 +21,10 @@ const SYMS = [
   { value: 'ismn', label: 'ISMN', height: 10, category: 'Retail & Product', validate: (t) => /^\d+$/.test(t) && t.length === 13, examples: [{label: 'Example', value: '9790123456785'}] },
   
   { value: 'code128', label: 'Code 128', height: 10, category: 'General Purpose', examples: [{label: 'Text', value: 'Hello World'}, {label: 'Mixed', value: 'ABC-123'}] },
-  { value: 'code39', label: 'Code 39', height: 10, category: 'General Purpose', validate: (t) => /^[A-Z0-9\-. $/+%]+$/i.test(t), examples: [{label: 'Example', value: 'CODE-39'}] },
-  { value: 'code93', label: 'Code 93', height: 10, category: 'General Purpose', validate: (t) => /^[A-Z0-9\-. $/+%]+$/i.test(t), examples: [{label: 'Example', value: 'CODE93'}] },
-  { value: 'code39ext', label: 'Code 39 Extended', height: 10, category: 'General Purpose', validate: (t) => /^[A-Z0-9\-. $/+%]+$/i.test(t), examples: [{label: 'Example', value: 'CODE-39-EXT'}] },
-  { value: 'code93ext', label: 'Code 93 Extended', height: 10, category: 'General Purpose', validate: (t) => /^[A-Z0-9\-. $/+%]+$/i.test(t), examples: [{label: 'Example', value: 'CODE93EXT'}] },
+  { value: 'code39', label: 'Code 39', height: 10, category: 'General Purpose', validate: (t) => /^[A-Z0-9\-. $/+%]+$/i.test(t), uppercase: true, examples: [{label: 'Example', value: 'CODE-39'}] },
+  { value: 'code93', label: 'Code 93', height: 10, category: 'General Purpose', validate: (t) => /^[A-Z0-9\-. $/+%]+$/i.test(t), uppercase: true, examples: [{label: 'Example', value: 'CODE93'}] },
+  { value: 'code39ext', label: 'Code 39 Extended', height: 10, category: 'General Purpose', validate: (t) => /^[A-Z0-9\-. $/+%]+$/i.test(t), uppercase: true, examples: [{label: 'Example', value: 'CODE-39-EXT'}] },
+  { value: 'code93ext', label: 'Code 93 Extended', height: 10, category: 'General Purpose', validate: (t) => /^[A-Z0-9\-. $/+%]+$/i.test(t), uppercase: true, examples: [{label: 'Example', value: 'CODE93EXT'}] },
   { value: 'code11', label: 'Code 11', height: 10, category: 'General Purpose', validate: (t) => /^[\d\-]+$/.test(t), examples: [{label: 'Example', value: '12345-678'}] },
   
   { value: 'qrcode', label: 'QR Code', height: 20, width: 20, category: '2D Codes', examples: [
@@ -69,11 +69,11 @@ const SYMS = [
   { value: 'postnet', label: 'USPS POSTNET', height: 8, category: 'Postal', validate: (t) => /^\d+$/.test(t) && (t.length === 5 || t.length === 9 || t.length === 11) },
   { value: 'planet', label: 'USPS PLANET', height: 8, category: 'Postal', validate: (t) => /^\d+$/.test(t) && (t.length === 11 || t.length === 13) },
   { value: 'onecode', label: 'USPS Intelligent Mail', height: 10, category: 'Postal', validate: (t) => /^\d+$/.test(t) && (t.length === 20 || t.length === 25 || t.length === 29 || t.length === 31) },
-  { value: 'royalmail', label: 'Royal Mail 4 State Customer Code', height: 10, category: 'Postal', validate: (t) => /^[A-Z0-9]+$/i.test(t) },
-  { value: 'kix', label: 'Royal Dutch TPG Post KIX', height: 8, category: 'Postal', validate: (t) => /^[A-Z0-9]+$/i.test(t) },
-  { value: 'japanpost', label: 'Japan Post 4 State Customer Code', height: 10, category: 'Postal', validate: (t) => /^[A-Z0-9\-]+$/i.test(t) },
+  { value: 'royalmail', label: 'Royal Mail 4 State Customer Code', height: 10, category: 'Postal', validate: (t) => /^[A-Z0-9]+$/i.test(t), uppercase: true },
+  { value: 'kix', label: 'Royal Dutch TPG Post KIX', height: 8, category: 'Postal', validate: (t) => /^[A-Z0-9]+$/i.test(t), uppercase: true },
+  { value: 'japanpost', label: 'Japan Post 4 State Customer Code', height: 10, category: 'Postal', validate: (t) => /^[A-Z0-9\-]+$/i.test(t), uppercase: true },
   { value: 'auspost', label: 'AusPost 4 State Customer Code', height: 10, category: 'Postal', validate: (t) => /^[\d]+$/.test(t) },
-  { value: 'canadapost', label: 'Canada Post', height: 10, category: 'Postal', validate: (t) => /^[A-Z0-9]+$/i.test(t) },
+  { value: 'canadapost', label: 'Canada Post', height: 10, category: 'Postal', validate: (t) => /^[A-Z0-9]+$/i.test(t), uppercase: true },
   
   { value: 'pharmacode', label: 'Pharmaceutical Binary Code', height: 8, category: 'Pharmaceutical', validate: (t) => /^\d+$/.test(t) && t.length >= 1 && t.length <= 6 },
   { value: 'code32', label: 'Italian Pharmacode', height: 10, category: 'Pharmaceutical', validate: (t) => /^\d+$/.test(t) && t.length === 9 },
@@ -82,8 +82,8 @@ const SYMS = [
   { value: 'telepen', label: 'Telepen', height: 10, category: 'Other' },
   { value: 'telepennumeric', label: 'Telepen Numeric', height: 10, category: 'Other', validate: (t) => /^\d+$/.test(t) },
   { value: 'msi', label: 'MSI Modified Plessey', height: 10, category: 'Other', validate: (t) => /^\d+$/.test(t) },
-  { value: 'plessey', label: 'Plessey UK', height: 10, category: 'Other', validate: (t) => /^[A-Z0-9]+$/i.test(t) },
-  { value: 'rationalizedCodabar', label: 'Codabar', height: 10, category: 'Other', validate: (t) => /^[A-D][\d\-\$:\/\.\+]+[A-D]$/i.test(t) },
+  { value: 'plessey', label: 'Plessey UK', height: 10, category: 'Other', validate: (t) => /^[A-Z0-9]+$/i.test(t), uppercase: true },
+  { value: 'rationalizedCodabar', label: 'Codabar', height: 10, category: 'Other', validate: (t) => /^[A-D][\d\-\$:\/\.\+]+[A-D]$/i.test(t), uppercase: true },
   { value: 'channelcode', label: 'Channel Code', height: 10, category: 'Other', validate: (t) => /^\d+$/.test(t) && t.length >= 1 && t.length <= 7 },
   { value: 'bc412', label: 'BC412', height: 10, category: 'Other', validate: (t) => /^\d+$/.test(t) },
 ];
@@ -291,6 +291,14 @@ const BarcodeTool = () => {
     } catch {}
   }, [pngScale]);
 
+  // Auto-uppercase text for barcode types that require it
+  useEffect(() => {
+    const symConfig = SYMS.find(s => s.value === type);
+    if (symConfig?.uppercase && text && text !== text.toUpperCase()) {
+      setText(text.toUpperCase());
+    }
+  }, [text, type]);
+
   // Debounce rendering
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -429,6 +437,13 @@ const BarcodeTool = () => {
                                 }
                                 setDropdownOpen(false);
                                 setFilter('');
+                                // If incompatible, fill in the first example
+                                if (!sym.compatible && sym.examples && sym.examples.length > 0) {
+                                  setText(sym.examples[0].value);
+                                } else if (sym.uppercase && text) {
+                                  // Auto-uppercase if the barcode type requires it
+                                  setText(text.toUpperCase());
+                                }
                               }}
                               className={`w-full text-left px-3 py-2 text-xs transition hover:bg-gray-100 dark:hover:bg-gray-700 ${
                                 type === sym.value ? 'bg-jwtBlue/10 dark:bg-jwtBlue/20 font-semibold' : ''
