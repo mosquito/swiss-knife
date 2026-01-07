@@ -77,11 +77,15 @@ const PasswordTool = () => {
       // Separators: if mixed, each gap gets a choice; if uniform, one choice for all
       const sepBits = useMixedSeparators ? (N > 0 ? (N - 1) * log2(S) : 0) : log2(S);
       
-      // Numbers: if enabled, adds log2(numRange) bits + choice of which separator to replace
-      const numBits = useNumbers ? (log2(numRange) + (N > 1 ? log2(N - 1) : 0)) : 0;
-      
-      // Suffix: only symbol (if enabled)
-      const suffixBits = log2(symOpts);
+      // Numbers: if enabled, adds log2(numRange) bits + position entropy
+      // Number can replace a separator (N-1 positions) or be inserted anywhere (2*N positions approx)
+      const numPositions = useNumbers ? (N > 1 ? (N - 1) + (2 * N) : 2 * N) : 1;
+      const numBits = useNumbers ? (log2(numRange) + log2(numPositions)) : 0;
+
+      // Symbol: can be inserted at any position (start, end, between words/seps)
+      // Approximately 2*N+1 positions after number placement
+      const symPositions = useSymbols ? (2 * N + 2) : 1;
+      const suffixBits = useSymbols ? (log2(symOpts) + log2(symPositions)) : 0;
       
       return Math.max(0, wordsBits + capBits + sepBits + numBits + suffixBits);
     };
@@ -268,15 +272,15 @@ const PasswordTool = () => {
                   <div className="flex flex-wrap gap-3 text-xs">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={useNumbers} onChange={e => setUseNumbers(e.target.checked)} className="cursor-pointer" />
-                      <span>Replace one separator with number</span>
+                      <span>Include number (random position)</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={useSymbols} onChange={e => setUseSymbols(e.target.checked)} className="cursor-pointer" />
-                      <span>Append symbol suffix</span>
+                      <span>Include symbol (random position)</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={urlSafe} onChange={e => setUrlSafe(e.target.checked)} className="cursor-pointer" />
-                      <span>URL-Safe symbols (- _ . ~ +)</span>
+                      <span>URL-safe only (- _ . ~ +)</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={useUpperCase} onChange={e => setUseUpperCase(e.target.checked)} disabled={onlyLowerCase} className="cursor-pointer disabled:opacity-50" />

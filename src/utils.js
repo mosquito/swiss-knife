@@ -117,9 +117,12 @@ export const generatePassword = (options = {}) => {
   const numWords = minW + Math.floor(Math.random() * (maxW - minW + 1));
   const words = [];
   
+  const urlSafeChars = new Set(['-', '_', '.', '~', '+']);
   const separators = [''];
   for (let i = 0; i < separatorsInput.length; i++) {
     const ch = separatorsInput[i];
+    // Skip non-URL-safe separators if urlSafe mode is enabled
+    if (urlSafe && !urlSafeChars.has(ch)) continue;
     if (!separators.includes(ch)) separators.push(ch);
   }
   
@@ -151,46 +154,89 @@ export const generatePassword = (options = {}) => {
     words.push(word);
   }
   
-  const separatorPositions = [];
-  let password = '';
-  if (useMixedSeparators && words.length > 0) {
-    password = words[0];
-    for (let i = 1; i < words.length; i++) {
-      const sepEach = chosenSeparators[i - 1];
-      separatorPositions.push({ index: password.length, sep: sepEach });
-      password += sepEach + words[i];
-    }
-  } else {
-    const sep = chosenSeparators.length > 0 ? chosenSeparators[0] : '';
-    password = words.join(sep);
-    if (sep && words.length > 1) {
-      let pos = words[0].length;
-      for (let i = 1; i < words.length; i++) {
-        separatorPositions.push({ index: pos, sep: sep });
-        pos += sep.length + words[i].length;
-      }
+  // Build array of parts that will be joined: [word, sep, word, sep, word, ...]
+  const parts = [];
+  for (let i = 0; i < words.length; i++) {
+    parts.push({ type: 'word', value: words[i] });
+    if (i < words.length - 1) {
+      parts.push({ type: 'sep', value: chosenSeparators[i] });
     }
   }
-  
-  if (useNumbers && separatorPositions.length > 0) {
+
+  // Collect insertable positions: start, end, and between any parts
+  // Position 0 = before first part, position parts.length = after last part
+  const insertPositions = [];
+  for (let i = 0; i <= parts.length; i++) {
+    insertPositions.push(i);
+  }
+
+  // Generate number if enabled
+  let numberStr = null;
+  if (useNumbers) {
     const numMin = Math.max(0, minNumber);
     const numMax = Math.max(numMin, maxNumber);
-    const randomNum = numMin + Math.floor(Math.random() * (numMax - numMin + 1));
-    const posToReplace = separatorPositions[Math.floor(Math.random() * separatorPositions.length)];
-    
-    const beforeSep = password.substring(0, posToReplace.index);
-    const afterSep = password.substring(posToReplace.index + posToReplace.sep.length);
-    password = beforeSep + randomNum + afterSep;
+    numberStr = String(numMin + Math.floor(Math.random() * (numMax - numMin + 1)));
   }
-  
+
+  // Generate symbol if enabled
+  let symbolChar = null;
   if (useSymbols) {
-    const specialChars = urlSafe 
-      ? ['-', '_', '.', '~', '+'] 
+    const specialChars = urlSafe
+      ? ['-', '_', '.', '~', '+']
       : ['!', '@', '#', '$', '%', '&', '*', '+', '=', '?', '-', '_', '.', '~', '^'];
-    const specialChar = specialChars[Math.floor(Math.random() * specialChars.length)];
-    password += specialChar;
+    symbolChar = specialChars[Math.floor(Math.random() * specialChars.length)];
   }
-  
+
+  // Randomly decide placement strategy for number and symbol
+  // Options: 'replace_sep' (replace a separator), 'insert' (insert at random position)
+  const sepIndices = parts.map((p, i) => p.type === 'sep' ? i : -1).filter(i => i >= 0);
+
+  // Place number: either replace a separator or insert at a random position
+  if (numberStr !== null) {
+    const canReplaceSep = sepIndices.length > 0 && Math.random() > 0.3; // 70% chance to replace sep if available
+    if (canReplaceSep) {
+      const sepIdx = sepIndices[Math.floor(Math.random() * sepIndices.length)];
+      parts[sepIdx] = { type: 'num', value: numberStr };
+      // Remove this index from sepIndices so symbol doesn't replace same position
+      const idxInArray = sepIndices.indexOf(sepIdx);
+      if (idxInArray > -1) sepIndices.splice(idxInArray, 1);
+    } else {
+      // Insert at random position (start, end, or between parts)
+      const insertIdx = insertPositions[Math.floor(Math.random() * insertPositions.length)];
+      parts.splice(insertIdx, 0, { type: 'num', value: numberStr });
+    }
+  }
+
+  // Place symbol: insert at random position (not replacing anything)
+  if (symbolChar !== null) {
+    // Recalculate insert positions after potential number insertion
+    const newInsertPositions = [];
+    for (let i = 0; i <= parts.length; i++) {
+      newInsertPositions.push(i);
+    }
+    // Weight positions: slightly favor non-end positions for more variation
+    // But still allow end position
+    const weights = newInsertPositions.map((pos, i) => {
+      if (i === 0) return 2; // start
+      if (i === newInsertPositions.length - 1) return 2; // end
+      return 3; // middle positions slightly more likely
+    });
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+    let rand = Math.random() * totalWeight;
+    let insertIdx = 0;
+    for (let i = 0; i < weights.length; i++) {
+      rand -= weights[i];
+      if (rand <= 0) {
+        insertIdx = newInsertPositions[i];
+        break;
+      }
+    }
+    parts.splice(insertIdx, 0, { type: 'sym', value: symbolChar });
+  }
+
+  // Join all parts
+  const password = parts.map(p => p.value).join('');
+
   return password;
 };
 
