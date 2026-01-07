@@ -1,7 +1,27 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import { decodeJWT, signJWT, verifyJWT, generateKeysAsync, isPrivateKey, extractPublicFromPrivateAsync } from './utils';
 import HistoryList from './HistoryList';
+
+// Helper to convert Unix timestamp to datetime-local format
+const unixToDatetimeLocal = (unix) => {
+  if (!unix && unix !== 0) return '';
+  const date = new Date(unix * 1000);
+  return date.toISOString().slice(0, 16);
+};
+
+// Helper to convert datetime-local to Unix timestamp
+const datetimeLocalToUnix = (datetime) => {
+  if (!datetime) return null;
+  return Math.floor(new Date(datetime).getTime() / 1000);
+};
+
+// Helper to format Unix timestamp for display
+const formatUnixTime = (unix) => {
+  if (!unix && unix !== 0) return 'Not set';
+  const date = new Date(unix * 1000);
+  return date.toLocaleString();
+};
 
 const DEFAULT_HEADER = { alg: 'HS256', typ: 'JWT' };
 const DEFAULT_PAYLOAD = { sub: '1234567890', name: 'John Doe', iat: 1516239022 };
@@ -25,6 +45,7 @@ const JwtTool = () => {
   const [tokenUpdating, setTokenUpdating] = useState(false);
   const [showPayloadHistory, setShowPayloadHistory] = useState(false);
   const [payloadForHistory, setPayloadForHistory] = useState(null);
+  const [showTimeClaims, setShowTimeClaims] = useState(false);
   const isUpdatingJson = useRef(false);
   const isUpdatingToken = useRef(false);
   const currentAlg = header.alg || 'HS256';
@@ -215,12 +236,74 @@ const JwtTool = () => {
     setPayloadText(JSON.stringify(restoredPayload, null, 2));
     setDecodeResult(prev => ({ ...prev, payloadError: null, payloadRaw: null }));
     setShowPayloadHistory(false);
-    
+
     if(isUpdatingToken.current) return;
     isUpdatingJson.current = true;
     const newToken = signJWT(header, restoredPayload, keyInput);
-    if(newToken){ 
-      setToken(newToken); 
+    if(newToken){
+      setToken(newToken);
+      setIsVerified(true);
+      setTokenUpdating(true);
+      setTimeout(() => setTokenUpdating(false), 300);
+    }
+    isUpdatingJson.current = false;
+  };
+
+  const handleTimeClaimChange = (claim, datetime) => {
+    if (!isEditable) return;
+    const newPayload = { ...payload };
+    const unixTime = datetimeLocalToUnix(datetime);
+    if (unixTime !== null) {
+      newPayload[claim] = unixTime;
+    } else {
+      delete newPayload[claim];
+    }
+    setPayload(newPayload);
+    setPayloadText(JSON.stringify(newPayload, null, 2));
+    setPayloadForHistory(newPayload);
+
+    isUpdatingJson.current = true;
+    const newToken = signJWT(header, newPayload, keyInput);
+    if (newToken) {
+      setToken(newToken);
+      setIsVerified(true);
+      setTokenUpdating(true);
+      setTimeout(() => setTokenUpdating(false), 300);
+    }
+    isUpdatingJson.current = false;
+  };
+
+  const handleSetTimeClaimNow = (claim) => {
+    if (!isEditable) return;
+    const now = Math.floor(Date.now() / 1000);
+    const newPayload = { ...payload, [claim]: now };
+    setPayload(newPayload);
+    setPayloadText(JSON.stringify(newPayload, null, 2));
+    setPayloadForHistory(newPayload);
+
+    isUpdatingJson.current = true;
+    const newToken = signJWT(header, newPayload, keyInput);
+    if (newToken) {
+      setToken(newToken);
+      setIsVerified(true);
+      setTokenUpdating(true);
+      setTimeout(() => setTokenUpdating(false), 300);
+    }
+    isUpdatingJson.current = false;
+  };
+
+  const handleClearTimeClaim = (claim) => {
+    if (!isEditable) return;
+    const newPayload = { ...payload };
+    delete newPayload[claim];
+    setPayload(newPayload);
+    setPayloadText(JSON.stringify(newPayload, null, 2));
+    setPayloadForHistory(newPayload);
+
+    isUpdatingJson.current = true;
+    const newToken = signJWT(header, newPayload, keyInput);
+    if (newToken) {
+      setToken(newToken);
       setIsVerified(true);
       setTokenUpdating(true);
       setTimeout(() => setTokenUpdating(false), 300);
@@ -310,6 +393,69 @@ const JwtTool = () => {
             {decodeResult.payloadError && (
               <div className="mt-1 text-xs text-red-600 dark:text-red-400 font-bold">
                 ⚠ {decodeResult.payloadError}
+              </div>
+            )}
+          </div>
+          <div className="mb-6">
+            <button
+              onClick={() => setShowTimeClaims(!showTimeClaims)}
+              className="flex items-center gap-2 text-xs text-gray-500 font-bold mb-2 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            >
+              <svg className={`w-3 h-3 transition-transform ${showTimeClaims ? 'rotate-90' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+              TIME CLAIMS (iat, exp, nbf)
+            </button>
+            {showTimeClaims && (
+              <div className="bg-white dark:bg-gray-800 rounded shadow-sm border border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700">
+                {[
+                  { key: 'iat', label: 'Issued At (iat)', description: 'When the token was issued' },
+                  { key: 'exp', label: 'Expiration (exp)', description: 'When the token expires' },
+                  { key: 'nbf', label: 'Not Before (nbf)', description: 'Token not valid before this time' }
+                ].map(({ key, label, description }) => (
+                  <div key={key} className="p-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <div className="sm:w-36 shrink-0">
+                        <div className="text-xs font-bold text-gray-700 dark:text-gray-300">{label}</div>
+                        <div className="text-[10px] text-gray-500 dark:text-gray-400">{description}</div>
+                      </div>
+                      <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                        <input
+                          type="datetime-local"
+                          value={unixToDatetimeLocal(payload[key])}
+                          onChange={(e) => handleTimeClaimChange(key, e.target.value)}
+                          disabled={!isEditable}
+                          className="flex-1 w-full sm:w-auto px-2 py-1.5 text-xs font-mono bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-jwtPurple focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleSetTimeClaimNow(key)}
+                            disabled={!isEditable}
+                            className="px-2 py-1 text-[10px] font-bold bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded border border-gray-300 dark:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Set to current time"
+                          >
+                            Now
+                          </button>
+                          {payload[key] !== undefined && (
+                            <button
+                              onClick={() => handleClearTimeClaim(key)}
+                              disabled={!isEditable}
+                              className="px-2 py-1 text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded border border-red-200 dark:border-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Remove this claim"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {payload[key] !== undefined && (
+                      <div className="mt-1.5 text-[10px] text-gray-500 dark:text-gray-400 font-mono pl-0 sm:pl-36">
+                        Unix: {payload[key]} → {formatUnixTime(payload[key])}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>
