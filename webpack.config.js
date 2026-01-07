@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: './src/index.js',
@@ -51,9 +52,14 @@ module.exports = {
       template: './public/index.html',
       filename: 'index.html',
       inject: 'body',
-      csp: process.env.NODE_ENV === 'production' 
+      csp: process.env.NODE_ENV === 'production'
         ? "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; frame-src 'none'; object-src 'none';"
         : false
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: 'public/favicon.svg', to: 'favicon.svg' }
+      ]
     })
   ],
   devServer: {
