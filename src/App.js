@@ -45,20 +45,19 @@ const App = () => {
       {/* Main content area - offset for sidebar on desktop, top bar on mobile */}
       <div className="h-full flex flex-col main-content-offset">
         <div className="flex-1 overflow-auto">
-          {activeTool === 'jwt' && <JwtTool />}
-          {activeTool === 'hash' && <HashTool />}
-          {activeTool === 'encode' && <EncodeDecodeTool />}
-          {activeTool === 'barcode' && <BarcodeTool />}
-          {activeTool === 'ipcalc' && <IPCalcTool />}
-          {activeTool === 'datetime' && <DateTimeTool />}
-          {activeTool === 'format' && <DataFormatTool />}
-          {activeTool === 'crypto' && <CryptoTool />}
-          {activeTool === 'password' && <PasswordTool />}
-          {activeTool === 'passwordhash' && <PasswordHashTool />}
-          {activeTool === 'uuid' && <UuidTool />}
-          {activeTool === 'wifiqr' && <WifiQRTool />}
-          {activeTool === 'units' && <UnitsConverterTool />}
-          {/* Future tools mount based on activeTool */}
+          <div className={activeTool === 'jwt' ? '' : 'hidden'}><JwtTool /></div>
+          <div className={activeTool === 'hash' ? '' : 'hidden'}><HashTool /></div>
+          <div className={activeTool === 'encode' ? '' : 'hidden'}><EncodeDecodeTool /></div>
+          <div className={activeTool === 'barcode' ? '' : 'hidden'}><BarcodeTool /></div>
+          <div className={activeTool === 'ipcalc' ? '' : 'hidden'}><IPCalcTool /></div>
+          <div className={activeTool === 'datetime' ? '' : 'hidden'}><DateTimeTool /></div>
+          <div className={activeTool === 'format' ? '' : 'hidden'}><DataFormatTool /></div>
+          <div className={activeTool === 'crypto' ? '' : 'hidden'}><CryptoTool /></div>
+          <div className={activeTool === 'password' ? '' : 'hidden'}><PasswordTool /></div>
+          <div className={activeTool === 'passwordhash' ? '' : 'hidden'}><PasswordHashTool /></div>
+          <div className={activeTool === 'uuid' ? '' : 'hidden'}><UuidTool /></div>
+          <div className={activeTool === 'wifiqr' ? '' : 'hidden'}><WifiQRTool /></div>
+          <div className={activeTool === 'units' ? '' : 'hidden'}><UnitsConverterTool /></div>
         </div>
         <DisclaimerFooter />
       </div>
