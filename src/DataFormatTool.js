@@ -1,6 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import TextareaWithLineNumbers from './TextareaWithLineNumbers';
+import Base64QuerySync from './Base64QuerySync';
 import YAML from 'yaml';
+
+const MAX_INPUT_URL = 2000;
+const FORMATS = ['json', 'yaml', 'toml', 'xml', 'html'];
 
 // Two-pane JSON/YAML/TOML converter (bidirectional). Browser-only.
 // Minimal TOML implementation (no dates, multiline strings, inline tables, etc.).
@@ -324,8 +328,45 @@ const DataFormatTool = () => {
 
   const copyToClipboard = async (text) => { try { await navigator.clipboard.writeText(text); } catch { /* ignore */ } };
 
+  // Compact URL encoding: l=leftFormat(0-4), r=rightFormat(0-4), t=text
+  const FORMAT_MAP = { json: 0, yaml: 1, toml: 2, xml: 3, html: 4 };
+  const FORMAT_REVERSE = ['json', 'yaml', 'toml', 'xml', 'html'];
+
+  const encodeState = useMemo(() => (v) => JSON.stringify({
+    l: FORMAT_MAP[v.leftFormat] ?? 0,
+    r: FORMAT_MAP[v.rightFormat] ?? 0,
+    t: v.leftText && v.leftText.length <= MAX_INPUT_URL ? v.leftText : ''
+  }), []);
+  const decodeState = useMemo(() => (str) => {
+    try {
+      const obj = JSON.parse(str);
+      if (obj && typeof obj === 'object' && obj.l in FORMAT_REVERSE && obj.r in FORMAT_REVERSE) {
+        return {
+          leftFormat: FORMAT_REVERSE[obj.l],
+          rightFormat: FORMAT_REVERSE[obj.r],
+          leftText: obj.t || ''
+        };
+      }
+    } catch {}
+    return undefined;
+  }, []);
+  const handleDecoded = (p) => {
+    if (p.leftFormat) setLeftFormat(p.leftFormat);
+    if (p.rightFormat) setRightFormat(p.rightFormat);
+    if (p.leftText !== undefined) setLeftText(p.leftText);
+  };
+  const syncValue = useMemo(() => ({ leftFormat, rightFormat, leftText }), [leftFormat, rightFormat, leftText]);
+
   return (
     <div className="tool-container">
+      <Base64QuerySync
+        value={syncValue}
+        encode={encodeState}
+        decode={decodeState}
+        onDecoded={handleDecoded}
+        queryParam="data"
+        toolHash="#format"
+      />
       <div className="tool-content">
         <h2 className="tool-title">Data Format Converter</h2>
         <p className="text-xs text-gray-600 dark:text-gray-400">Bidirectional conversion between JSON, YAML, TOML. XML and HTML formatting only (no conversion). Edit either pane; the other updates. All local. TOML support is minimal.</p>

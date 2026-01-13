@@ -271,6 +271,7 @@ const ByteConverterTool = () => {
           if (decoded.numberBase) setNumberBase(decoded.numberBase);
           if (decoded.storageBase) setStorageBase(decoded.storageBase);
         }}
+        queryParam="bytes"
       />
       <div className="tool-content">
         {/* Header */}

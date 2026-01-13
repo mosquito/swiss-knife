@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import Base64QuerySync from './Base64QuerySync';
 
 // Helper: format relative difference between a target date and now.
 const humanRelative = (targetMs, nowMs) => {
@@ -28,6 +29,21 @@ const parseInputDate = (str) => {
 };
 
 const isNumeric = (v) => /^[-]?\d+(\.\d+)?$/.test(v.trim());
+
+// Convert date string to datetime-local format (YYYY-MM-DDTHH:mm)
+const toDatetimeLocal = (str) => {
+  if (!str) return '';
+  const ms = Date.parse(str);
+  if (isNaN(ms)) return '';
+  const d = new Date(ms);
+  // Format as local datetime
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const mins = String(d.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${mins}`;
+};
 
 const DateTimeTool = () => {
   // Prefill with current time: epoch seconds and current ISO string
@@ -84,8 +100,33 @@ const DateTimeTool = () => {
 
   const nowInfo = formatDetails(nowMs);
 
+  // Compact URL sync: t=timestamp, d=datetime
+  const encodeState = useMemo(() => (v) => JSON.stringify({ t: v.tsInput, d: v.dtInput }), []);
+  const decodeState = useMemo(() => (str) => {
+    try {
+      const obj = JSON.parse(str);
+      if (obj && (obj.t !== undefined || obj.d !== undefined)) {
+        return { tsInput: obj.t, dtInput: obj.d };
+      }
+    } catch {}
+    return undefined;
+  }, []);
+  const handleDecoded = (p) => {
+    if (p.tsInput !== undefined) setTsInput(p.tsInput);
+    if (p.dtInput !== undefined) setDtInput(p.dtInput);
+  };
+  const syncValue = useMemo(() => ({ tsInput, dtInput }), [tsInput, dtInput]);
+
   return (
     <div className="tool-container">
+      <Base64QuerySync
+        value={syncValue}
+        encode={encodeState}
+        decode={decodeState}
+        onDecoded={handleDecoded}
+        queryParam="time"
+        toolHash="#datetime"
+      />
       <div className="tool-content">
         <h2 className="tool-title">Date / Time</h2>
         <p className="text-xs text-gray-600 dark:text-gray-400">Convert between Unix timestamps and human-readable datetimes. All calculations are local.</p>
@@ -122,13 +163,21 @@ const DateTimeTool = () => {
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Date → Unix Timestamp</span>
             </div>
-            <input
-              value={dtInput}
-              onChange={e=>setDtInput(e.target.value)}
-              placeholder="Enter date string (ISO, YYYY-MM-DD, RFC2822, etc.)"
-              className="w-full text-xs font-mono px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-jwtPurple"
-              spellCheck="false"
-            />
+            <div className="flex gap-2">
+              <input
+                value={dtInput}
+                onChange={e=>setDtInput(e.target.value)}
+                placeholder="Enter date string (ISO, YYYY-MM-DD, RFC2822, etc.)"
+                className="flex-1 text-xs font-mono px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-jwtPurple"
+                spellCheck="false"
+              />
+              <input
+                type="datetime-local"
+                value={toDatetimeLocal(dtInput)}
+                onChange={e => setDtInput(new Date(e.target.value).toISOString())}
+                className="text-xs px-2 py-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-jwtPurple"
+              />
+            </div>
             {errorDt && <div className="mt-2 text-[10px] text-red-600 font-mono">{errorDt}</div>}
             {dtInfo && !errorDt && (
               <div className="mt-3 font-mono text-[11px] break-all space-y-1">

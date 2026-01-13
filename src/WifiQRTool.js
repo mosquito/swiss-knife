@@ -19,7 +19,6 @@ const WifiQRTool = () => {
   const canvasRef = useRef(null);
   const svgRef = useRef(null);
   const debounceRef = useRef(null);
-  const [paramDecoded, setParamDecoded] = useState(false);
 
   // Load outputFormat preference from localStorage
   useEffect(() => {
@@ -38,26 +37,8 @@ const WifiQRTool = () => {
     } catch {}
   }, []);
 
-  // Load from URL params or history
+  // Load from history or use defaults
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const apParam = params.get('ap');
-    const passphraseParam = params.get('passphrase');
-    const secParam = params.get('sec');
-    const hiddenParam = params.get('hidden');
-
-    if (apParam) {
-      setSsid(apParam);
-      setPassword(passphraseParam || '');
-      // Map sec number to security type: 1=WEP, 2=WPA, 3=nopass
-      if (secParam === '1') setSecurity('WEP');
-      else if (secParam === '3') setSecurity('nopass');
-      else setSecurity('WPA');
-      setHidden(hiddenParam === 'true' || hiddenParam === '1');
-      setParamDecoded(true);
-      return;
-    }
-
     try {
       const raw = localStorage.getItem(HISTORY_KEY);
       if (raw) {
@@ -180,24 +161,6 @@ const WifiQRTool = () => {
       localStorage.setItem('wifi_qr_png_scale', String(pngScale));
     } catch {}
   }, [pngScale]);
-
-  // Update URL params when values change
-  useEffect(() => {
-    if (!paramDecoded && !ssid) return;
-    const params = new URLSearchParams();
-    if (ssid) params.set('ap', ssid);
-    if (password) params.set('passphrase', password);
-    // Map security to number: WEP=1, WPA=2, nopass=3
-    const secNum = security === 'WEP' ? '1' : security === 'nopass' ? '3' : '2';
-    params.set('sec', secNum);
-    if (hidden) params.set('hidden', 'true');
-    
-    const newSearch = params.toString();
-    const currentSearch = window.location.search.substring(1);
-    if (newSearch !== currentSearch) {
-      window.history.replaceState(null, '', `?${newSearch}${window.location.hash}`);
-    }
-  }, [ssid, password, security, hidden, paramDecoded]);
 
   // Debounce rendering
   useEffect(() => {

@@ -3,7 +3,6 @@ import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import bcrypt from 'bcryptjs';
 import { encodeBase64, decodeBase64, encodeCrypt64, generateSalt, generatePassword } from './utils';
 import { passwordDictionary } from './passwordDictionary';
-import Base64QuerySync from './Base64QuerySync';
 
 const textEncoder = new TextEncoder();
 
@@ -201,7 +200,6 @@ const PasswordHashTool = () => {
 
   return (
     <div className="tool-container">
-      <Base64QuerySync value={hashType} setValue={setHashType} />
       <div className="tool-content">
           <h2 className="tool-title">Password Hash Generator</h2>
           <p className="text-xs text-gray-600 dark:text-gray-400">

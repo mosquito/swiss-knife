@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import { decodeJWT, signJWT, verifyJWT, generateKeysAsync, isPrivateKey, extractPublicFromPrivateAsync } from './utils';
 import HistoryList from './HistoryList';

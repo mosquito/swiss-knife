@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import TextareaWithLineNumbers from './TextareaWithLineNumbers';
+import Base64QuerySync from './Base64QuerySync';
 import MD5 from 'crypto-js/md5';
 import SHA256 from 'crypto-js/sha256';
 import SHA512 from 'crypto-js/sha512';
@@ -11,12 +12,17 @@ import { encodeBase32, encodeBase64, encodeBase85, decodeHex } from './utils';
 // Full algorithm list we compute concurrently
 const algorithms = ['MD5','SHA-256','SHA-512','BLAKE2b','BLAKE2s','bcrypt'];
 
+const MAX_URL_INPUT = 2000;
+
 const HashTool = () => {
   const [input, setInput] = useState('');
   const [results, setResults] = useState({}); // { alg: { hex, base64, base32, base85 } }
   const [isComputing, setIsComputing] = useState(false);
   const [error, setError] = useState('');
   const debounceRef = useRef(null);
+
+  const encodeState = useMemo(() => (v) => v.length <= MAX_URL_INPUT ? v : '', []);
+  const decodeState = useMemo(() => (str) => str !== undefined ? str : undefined, []);
 
   const computeAll = async (text) => {
     if (!text) { setResults({}); return; }
@@ -74,6 +80,14 @@ const HashTool = () => {
 
   return (
     <div className="tool-container">
+      <Base64QuerySync
+        value={input}
+        encode={encodeState}
+        decode={decodeState}
+        onDecoded={setInput}
+        queryParam="hash"
+        toolHash="#hash"
+      />
       <div className="tool-content">
         <h2 className="tool-title">Hashes</h2>
         <p className="text-xs mb-4 text-gray-600 dark:text-gray-400">All operations are local; no data leaves your browser. MD5 is insecure—use only for legacy checks.</p>

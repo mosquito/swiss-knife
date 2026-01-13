@@ -374,27 +374,41 @@ const UnitsConverterTool = () => {
     });
   };
 
-  // Query string state for sharing
-  const qsState = {
-    category,
-    inputValue,
-    inputUnit,
-    numberBase,
-    storageBase
-  };
+  // Compact URL encoding
+  const CATEGORY_MAP = { storage: 0, temperature: 1, length: 2, weight: 3, number: 4, time: 5 };
+  const CATEGORY_REVERSE = ['storage', 'temperature', 'length', 'weight', 'number', 'time'];
+  const NUMBASE_MAP = { dec: 0, bin: 1, hex: 2, oct: 3 };
+  const NUMBASE_REVERSE = ['dec', 'bin', 'hex', 'oct'];
+  const STORBASE_MAP = { binary: 0, decimal: 1 };
+  const STORBASE_REVERSE = ['binary', 'decimal'];
+
+  const qsState = { category, inputValue, inputUnit, numberBase, storageBase };
 
   return (
     <main className="tool-container">
       <Base64QuerySync
         value={qsState}
-        encode={(v) => JSON.stringify(v)}
+        encode={(v) => JSON.stringify({
+          c: CATEGORY_MAP[v.category] ?? 0,
+          v: v.inputValue,
+          u: v.inputUnit,
+          n: NUMBASE_MAP[v.numberBase] ?? 0,
+          s: STORBASE_MAP[v.storageBase] ?? 0
+        })}
         decode={(str) => {
           try {
-            const parsed = JSON.parse(str);
-            return parsed;
-          } catch {
-            return undefined;
-          }
+            const obj = JSON.parse(str);
+            if (obj && typeof obj === 'object') {
+              return {
+                category: CATEGORY_REVERSE[obj.c] || 'storage',
+                inputValue: obj.v || '',
+                inputUnit: obj.u || '',
+                numberBase: NUMBASE_REVERSE[obj.n] || 'dec',
+                storageBase: STORBASE_REVERSE[obj.s] || 'binary'
+              };
+            }
+          } catch {}
+          return undefined;
         }}
         onDecoded={(decoded) => {
           if (decoded.category) setCategory(decoded.category);
@@ -403,6 +417,8 @@ const UnitsConverterTool = () => {
           if (decoded.numberBase) setNumberBase(decoded.numberBase);
           if (decoded.storageBase) setStorageBase(decoded.storageBase);
         }}
+        queryParam="units"
+        toolHash="#units"
       />
       <div className="tool-content">
         {/* Header */}

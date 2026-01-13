@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import TextareaWithLineNumbers from './TextareaWithLineNumbers';
+import Base64QuerySync from './Base64QuerySync';
 import { ShortUUID } from './shortuuid';
 import { encodeBase32, encodeBase64, encodeBase85 } from './utils';
 import { 
@@ -78,6 +79,15 @@ const UuidTool = () => {
   const [uuid7UseLegacy, setUuid7UseLegacy] = useState(false);
   const [uuid3CustomNamespaceValid, setUuid3CustomNamespaceValid] = useState(true);
   const [uuid5CustomNamespaceValid, setUuid5CustomNamespaceValid] = useState(true);
+  const [urlDecoded, setUrlDecoded] = useState(false);
+
+  // URL sync for converter UUID
+  const syncValue = useMemo(() => converterUuid, [converterUuid]);
+  const encodeState = useMemo(() => (v) => v || '', []);
+  const decodeState = useMemo(() => (str) => {
+    if (str && (validate(str) || str.length === 22)) return str;
+    return undefined;
+  }, []);
 
   // Converter handlers
   const handleConverterUuidChange = (value) => {
@@ -511,6 +521,21 @@ const UuidTool = () => {
 
   return (
     <div className="tool-container">
+      <Base64QuerySync
+        value={syncValue}
+        encode={encodeState}
+        decode={decodeState}
+        onDecoded={(val) => {
+          setUrlDecoded(true);
+          if (validate(val)) {
+            handleConverterUuidChange(val);
+          } else if (val.length === 22) {
+            handleConverterShortChange(val);
+          }
+        }}
+        queryParam="uuid"
+        toolHash="#uuid"
+      />
       <div className="tool-content">
         <div className="max-w-6xl mx-auto">
           <h2 className="tool-title mb-2">

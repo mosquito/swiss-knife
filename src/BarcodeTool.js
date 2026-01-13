@@ -350,13 +350,13 @@ const BarcodeTool = () => {
         {/* Sync combined barcode state (type+text) to base64 URL param 'value' */}
         <Base64QuerySync
           value={{ type, text }}
-          encode={(obj) => JSON.stringify(obj)}
+          encode={(obj) => JSON.stringify({ t: obj.type, x: obj.text })}
           decode={(s) => {
             try {
               const parsed = JSON.parse(s);
-              if (parsed && typeof parsed === 'object' && typeof parsed.text === 'string' && typeof parsed.type === 'string') {
-                if (SYMS.some(sym => sym.value === parsed.type)) {
-                  return parsed; // success
+              if (parsed && typeof parsed === 'object' && typeof parsed.x === 'string' && typeof parsed.t === 'string') {
+                if (SYMS.some(sym => sym.value === parsed.t)) {
+                  return { type: parsed.t, text: parsed.x };
                 }
               }
             } catch {}
@@ -377,6 +377,7 @@ const BarcodeTool = () => {
             setInitialLoadDone(true);
           }}
           queryParam="barcode"
+          toolHash="#barcode"
           updateOnMount={false}
         />
         <h2 className="tool-title">Barcode Generator</h2>

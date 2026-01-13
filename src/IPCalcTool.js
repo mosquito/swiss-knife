@@ -307,6 +307,61 @@ function parseIp(input) {
   }
 }
 
+// Compact binary encoding for URLs: IP bytes + prefix byte → base64
+function ipToBase64(ipStr) {
+  try {
+    const ipObj = parseIp(ipStr);
+    const isV6 = ipObj instanceof IPv6;
+    const byteLen = isV6 ? 16 : 4;
+    const bytes = new Uint8Array(byteLen + 1);
+
+    // Convert address to bytes (big-endian)
+    let addr = ipObj.address;
+    for (let i = byteLen - 1; i >= 0; i--) {
+      bytes[i] = Number(addr & 0xFFn);
+      addr >>= 8n;
+    }
+    bytes[byteLen] = Number(ipObj.prefixLength);
+
+    // Convert to base64
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary).replace(/=+$/, '');
+  } catch {
+    return '';
+  }
+}
+
+function base64ToIp(b64) {
+  try {
+    // Restore padding
+    const pad = b64.length % 4;
+    const padded = pad === 2 ? b64 + '==' : pad === 3 ? b64 + '=' : b64;
+    const binary = atob(padded);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+
+    const isV6 = bytes.length === 17;
+    const byteLen = isV6 ? 16 : 4;
+
+    // Convert bytes to address (big-endian)
+    let addr = 0n;
+    for (let i = 0; i < byteLen; i++) {
+      addr = (addr << 8n) | BigInt(bytes[i]);
+    }
+    const prefix = bytes[byteLen];
+
+    const ipObj = isV6 ? new IPv6(addr, prefix) : new IPv4(addr, prefix);
+    return `${ipObj.toString()}/${prefix}`;
+  } catch {
+    return '';
+  }
+}
+
 // Base64 query param syncing now handled via Base64QuerySync component.
 
 const IPCalcTool = () => {
@@ -544,21 +599,35 @@ const IPCalcTool = () => {
     <div className="tool-container">
       {/* Constrain width on wide screens */}
       <div className="tool-content">
-        {/* Sync IP input with base64 URL query param */}
+        {/* Sync IP input and NAT64 prefix with compact binary base64 encoding */}
         <Base64QuerySync
-          value={input}
-          encode={(v) => (typeof v === 'string' ? v : '')}
+          value={{ input, nat64PrefixInput }}
+          encode={(v) => {
+            const i = ipToBase64(v.input);
+            const n = ipToBase64(v.nat64PrefixInput);
+            return i ? JSON.stringify({ i, n }) : '';
+          }}
           decode={(s) => {
-            // Accept plain string for IP (/CIDR) only
-            if (typeof s === 'string' && /[.:]/.test(s)) {
-              paramDecodedRef.current = true;
-              setParamDecoded(true);
-              return s;
-            }
+            try {
+              const obj = JSON.parse(s);
+              if (obj && obj.i) {
+                const ip = base64ToIp(obj.i);
+                const nat64 = obj.n ? base64ToIp(obj.n) : '64:ff9b::/96';
+                if (ip) {
+                  paramDecodedRef.current = true;
+                  setParamDecoded(true);
+                  return { input: ip, nat64PrefixInput: nat64 };
+                }
+              }
+            } catch {}
             return undefined;
           }}
-          onDecoded={(v) => setInput(v)}
+          onDecoded={(v) => {
+            setInput(v.input);
+            if (v.nat64PrefixInput) setNat64PrefixInput(v.nat64PrefixInput);
+          }}
           queryParam="ip"
+          toolHash="#ipcalc"
           updateOnMount={true}
         />
         <h2 className="tool-title">IP Calculator</h2>
