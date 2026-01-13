@@ -3,11 +3,11 @@ import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import Base64QuerySync from './Base64QuerySync';
 import { ShortUUID } from './shortuuid';
 import { encodeBase32, encodeBase64, encodeBase85 } from './utils';
-import { 
-  generateUUIDv1, 
-  generateUUIDv3, 
-  generateUUIDv4, 
-  generateUUIDv5, 
+import {
+  generateUUIDv1,
+  generateUUIDv3,
+  generateUUIDv4,
+  generateUUIDv5,
   generateUUIDv6,
   generateUUIDv7,
   validate,
@@ -17,6 +17,10 @@ import {
   NAMESPACE_OID,
   NAMESPACE_X500
 } from './uuidGenerators';
+
+// Namespace type mapping for compact URL encoding
+const NS_MAP = { DNS: 0, URL: 1, OID: 2, X500: 3, CUSTOM: 4 };
+const NS_REVERSE = ['DNS', 'URL', 'OID', 'X500', 'CUSTOM'];
 
 const UuidTool = () => {
   const shortUUID = new ShortUUID();
@@ -81,11 +85,21 @@ const UuidTool = () => {
   const [uuid5CustomNamespaceValid, setUuid5CustomNamespaceValid] = useState(true);
   const [urlDecoded, setUrlDecoded] = useState(false);
 
-  // URL sync for converter UUID
-  const syncValue = useMemo(() => converterUuid, [converterUuid]);
-  const encodeState = useMemo(() => (v) => v || '', []);
+  // URL sync for UUID tool state
+  // s: shortUUID (converter), 3: uuid3 state, 5: uuid5 state
+  // c: custom namespace for uuid3/5
+  const syncValue = useMemo(() => ({
+    s: converterShort,
+    3: { n: uuid3Name, t: NS_MAP[uuid3NamespaceType], c: uuid3CustomNamespace },
+    5: { n: uuid5Name, t: NS_MAP[uuid5NamespaceType], c: uuid5CustomNamespace }
+  }), [converterShort, uuid3Name, uuid3NamespaceType, uuid3CustomNamespace, uuid5Name, uuid5NamespaceType, uuid5CustomNamespace]);
+
+  const encodeState = useMemo(() => (v) => JSON.stringify(v), []);
   const decodeState = useMemo(() => (str) => {
-    if (str && (validate(str) || str.length === 22)) return str;
+    try {
+      const parsed = JSON.parse(str);
+      if (typeof parsed === 'object' && parsed !== null) return parsed;
+    } catch {}
     return undefined;
   }, []);
 
@@ -527,10 +541,21 @@ const UuidTool = () => {
         decode={decodeState}
         onDecoded={(val) => {
           setUrlDecoded(true);
-          if (validate(val)) {
-            handleConverterUuidChange(val);
-          } else if (val.length === 22) {
-            handleConverterShortChange(val);
+          // Restore converter from shortUUID
+          if (val.s) {
+            handleConverterShortChange(val.s);
+          }
+          // Restore uuid3 state (including custom namespace)
+          if (val['3']) {
+            if (val['3'].n !== undefined) setUuid3Name(val['3'].n);
+            if (val['3'].t !== undefined) setUuid3NamespaceType(NS_REVERSE[val['3'].t] || 'DNS');
+            if (val['3'].c !== undefined) setUuid3CustomNamespace(val['3'].c);
+          }
+          // Restore uuid5 state (including custom namespace)
+          if (val['5']) {
+            if (val['5'].n !== undefined) setUuid5Name(val['5'].n);
+            if (val['5'].t !== undefined) setUuid5NamespaceType(NS_REVERSE[val['5'].t] || 'DNS');
+            if (val['5'].c !== undefined) setUuid5CustomNamespace(val['5'].c);
           }
         }}
         queryParam="uuid"
