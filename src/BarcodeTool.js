@@ -223,8 +223,8 @@ const BarcodeTool = () => {
       
       if (outputFormat === 'svg') {
         const svg = bwipjs.toSVG(options);
-        const blob = new Blob([svg], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
+        // Use data URL instead of blob URL for CSP compatibility (offline mode)
+        const url = 'data:image/svg+xml,' + encodeURIComponent(svg);
         setImgUrl(url);
         setImageKey(prev => prev + 1);
         if (svgRef.current) svgRef.current = svg;

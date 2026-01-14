@@ -96,8 +96,8 @@ const WifiQRTool = () => {
           width: 10,
           includetext: false,
         });
-        const blob = new Blob([svg], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
+        // Use data URL instead of blob URL for CSP compatibility (offline mode)
+        const url = 'data:image/svg+xml,' + encodeURIComponent(svg);
         setImgUrl(url);
         if (svgRef.current) svgRef.current = svg;
       } else {
