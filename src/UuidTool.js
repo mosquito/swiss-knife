@@ -22,39 +22,269 @@ import {
 const NS_MAP = { DNS: 0, URL: 1, OID: 2, X500: 3, CUSTOM: 4 };
 const NS_REVERSE = ['DNS', 'URL', 'OID', 'X500', 'CUSTOM'];
 
+
+const shortUUID = new ShortUUID();
+
+// Helper functions for encoding
+const uuidToHex = (uuid) => {
+  if (!uuid || !validate(uuid)) return '';
+  return uuid.replace(/-/g, '');
+};
+
+const uuidToBytes = (uuid) => {
+  if (!uuid || !validate(uuid)) return null;
+  const hex = uuid.replace(/-/g, '');
+  const bytes = new Uint8Array(16);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+  }
+  return bytes;
+};
+
+const uuidToBase64 = (uuid) => {
+  const bytes = uuidToBytes(uuid);
+  return bytes ? encodeBase64(bytes) : '';
+};
+
+const uuidToBase32 = (uuid) => {
+  const bytes = uuidToBytes(uuid);
+  return bytes ? encodeBase32(bytes) : '';
+};
+
+const uuidToBase85 = (uuid) => {
+  const bytes = uuidToBytes(uuid);
+  return bytes ? encodeBase85(bytes) : '';
+};
+
+const copyToClipboard = (text) => {
+  navigator.clipboard.writeText(text);
+};
+
+const UuidRow = ({ version, uuid, name, namespaceName, customNamespace, onNameChange, onNamespaceChange, onCustomNamespaceChange, description, useLegacy, onLegacyChange, isCustomNamespaceValid, onRegenerate }) => {
+  const [showEncodings, setShowEncodings] = useState(false);
+  const shortForm = uuid ? (useLegacy ? shortUUID.legacyEncode(uuid) : shortUUID.encode(uuid)) : '';
+  const hexForm = uuid ? uuidToHex(uuid) : '';
+  const base64Form = uuid ? uuidToBase64(uuid) : '';
+  const base32Form = uuid ? uuidToBase32(uuid) : '';
+  const base85Form = uuid ? uuidToBase85(uuid) : '';
+  
+  return (
+    <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-800">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          UUID v{version}
+        </h3>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-gray-500 dark:text-gray-400">{description}</span>
+          {onRegenerate && (
+            <button
+              onClick={onRegenerate}
+              className="px-2 py-1 text-xs bg-gray-700 dark:bg-gray-600 hover:bg-gray-800 dark:hover:bg-gray-500 text-white rounded font-medium transition-colors"
+              title="Regenerate this UUID"
+            >
+              <span className="icon icon-cycled-arrows"></span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {name !== undefined && (
+        <div className="mb-3 space-y-2">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+              Namespace Type
+            </label>
+            <select
+              value={namespaceName}
+              onChange={(e) => onNamespaceChange(e.target.value)}
+              className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="DNS">DNS (6ba7b810...)</option>
+              <option value="URL">URL (6ba7b811...)</option>
+              <option value="OID">OID (6ba7b812...)</option>
+              <option value="X500">X500 (6ba7b814...)</option>
+              <option value="CUSTOM">Custom UUID</option>
+            </select>
+          </div>
+          {namespaceName === 'CUSTOM' && (
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Custom Namespace UUID
+              </label>
+              <input
+                type="text"
+                value={customNamespace}
+                onChange={(e) => onCustomNamespaceChange(e.target.value)}
+                className={`w-full px-3 py-1.5 text-sm border rounded font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 ${
+                  isCustomNamespaceValid === false 
+                    ? 'border-red-500 dark:border-red-500 focus:ring-red-500 focus:border-red-500' 
+                    : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-transparent'
+                }`}
+                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              />
+              {isCustomNamespaceValid === false && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">Invalid UUID format</p>
+              )}
+            </div>
+          )}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+              Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => onNameChange(e.target.value)}
+              className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="e.g., example.com"
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+              Long
+            </label>
+            <button
+              onClick={() => copyToClipboard(uuid)}
+              className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Copy
+            </button>
+          </div>
+          <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded font-mono text-sm text-center text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700">
+            {uuid}
+          </div>
+        </div>
+
+        <div>
+          <button
+            onClick={() => setShowEncodings(!showEncodings)}
+            className="w-full flex items-center justify-between px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors"
+          >
+            <span>Other Encodings (Short, Base64, Base32, Base85, Hex)</span>
+            <svg
+              className={`w-4 h-4 transition-transform ${showEncodings ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+
+        {showEncodings && (
+          <div className="space-y-2 pt-2">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Short {useLegacy && <span className="text-[10px]">(legacy)</span>}
+                </label>
+                <button
+                  onClick={() => copyToClipboard(shortForm)}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  Copy
+                </button>
+              </div>
+              <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded font-mono text-sm text-center text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700">
+                {shortForm}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Base64
+                </label>
+                <button
+                  onClick={() => copyToClipboard(base64Form)}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  Copy
+                </button>
+              </div>
+              <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded font-mono text-sm text-center text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700">
+                {base64Form}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Base32
+                </label>
+                <button
+                  onClick={() => copyToClipboard(base32Form)}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  Copy
+                </button>
+              </div>
+              <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded font-mono text-sm text-center text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700">
+                {base32Form}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Base85
+                </label>
+                <button
+                  onClick={() => copyToClipboard(base85Form)}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  Copy
+                </button>
+              </div>
+              <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded font-mono text-sm text-center text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700">
+                {base85Form}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Hex
+                </label>
+                <button
+                  onClick={() => copyToClipboard(hexForm)}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  Copy
+                </button>
+              </div>
+              <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded font-mono text-sm text-center text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700">
+                {hexForm}
+              </div>
+            </div>
+
+            {onLegacyChange && (
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useLegacy}
+                    onChange={(e) => onLegacyChange(e.target.checked)}
+                    className="cursor-pointer"
+                  />
+                  <span className="text-gray-600 dark:text-gray-400">Use legacy ShortUUID format</span>
+                </label>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const UuidTool = () => {
-  const shortUUID = new ShortUUID();
-  
-  // Helper functions for encoding
-  const uuidToHex = (uuid) => {
-    if (!uuid || !validate(uuid)) return '';
-    return uuid.replace(/-/g, '');
-  };
-  
-  const uuidToBytes = (uuid) => {
-    if (!uuid || !validate(uuid)) return null;
-    const hex = uuid.replace(/-/g, '');
-    const bytes = new Uint8Array(16);
-    for (let i = 0; i < hex.length; i += 2) {
-      bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
-    }
-    return bytes;
-  };
-  
-  const uuidToBase64 = (uuid) => {
-    const bytes = uuidToBytes(uuid);
-    return bytes ? encodeBase64(bytes) : '';
-  };
-  
-  const uuidToBase32 = (uuid) => {
-    const bytes = uuidToBytes(uuid);
-    return bytes ? encodeBase32(bytes) : '';
-  };
-  
-  const uuidToBase85 = (uuid) => {
-    const bytes = uuidToBytes(uuid);
-    return bytes ? encodeBase85(bytes) : '';
-  };
   
   // Converter state
   const [converterUuid, setConverterUuid] = useState('');
@@ -304,234 +534,6 @@ const UuidTool = () => {
       setUuid5(generateUUIDv5(uuid5Name, ns));
     }
   }, [uuid5Name, uuid5NamespaceType, uuid5CustomNamespace]);
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-  };
-
-  const UuidRow = ({ version, uuid, name, namespaceName, customNamespace, onNameChange, onNamespaceChange, onCustomNamespaceChange, description, useLegacy, onLegacyChange, isCustomNamespaceValid, onRegenerate }) => {
-    const [showEncodings, setShowEncodings] = useState(false);
-    const shortForm = uuid ? (useLegacy ? shortUUID.legacyEncode(uuid) : shortUUID.encode(uuid)) : '';
-    const hexForm = uuid ? uuidToHex(uuid) : '';
-    const base64Form = uuid ? uuidToBase64(uuid) : '';
-    const base32Form = uuid ? uuidToBase32(uuid) : '';
-    const base85Form = uuid ? uuidToBase85(uuid) : '';
-    
-    return (
-      <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-800">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            UUID v{version}
-          </h3>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-500 dark:text-gray-400">{description}</span>
-            {onRegenerate && (
-              <button
-                onClick={onRegenerate}
-                className="px-2 py-1 text-xs bg-gray-700 dark:bg-gray-600 hover:bg-gray-800 dark:hover:bg-gray-500 text-white rounded font-medium transition-colors"
-                title="Regenerate this UUID"
-              >
-                <span className="icon icon-cycled-arrows"></span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {name !== undefined && (
-          <div className="mb-3 space-y-2">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                Namespace Type
-              </label>
-              <select
-                value={namespaceName}
-                onChange={(e) => onNamespaceChange(e.target.value)}
-                className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="DNS">DNS (6ba7b810...)</option>
-                <option value="URL">URL (6ba7b811...)</option>
-                <option value="OID">OID (6ba7b812...)</option>
-                <option value="X500">X500 (6ba7b814...)</option>
-                <option value="CUSTOM">Custom UUID</option>
-              </select>
-            </div>
-            {namespaceName === 'CUSTOM' && (
-              <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                  Custom Namespace UUID
-                </label>
-                <input
-                  type="text"
-                  value={customNamespace}
-                  onChange={(e) => onCustomNamespaceChange(e.target.value)}
-                  className={`w-full px-3 py-1.5 text-sm border rounded font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 ${
-                    isCustomNamespaceValid === false 
-                      ? 'border-red-500 dark:border-red-500 focus:ring-red-500 focus:border-red-500' 
-                      : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-transparent'
-                  }`}
-                  placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                />
-                {isCustomNamespaceValid === false && (
-                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">Invalid UUID format</p>
-                )}
-              </div>
-            )}
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                Name
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => onNameChange(e.target.value)}
-                className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., example.com"
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                Long
-              </label>
-              <button
-                onClick={() => copyToClipboard(uuid)}
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                Copy
-              </button>
-            </div>
-            <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded font-mono text-sm text-center text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700">
-              {uuid}
-            </div>
-          </div>
-
-          <div>
-            <button
-              onClick={() => setShowEncodings(!showEncodings)}
-              className="w-full flex items-center justify-between px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors"
-            >
-              <span>Other Encodings (Short, Base64, Base32, Base85, Hex)</span>
-              <svg
-                className={`w-4 h-4 transition-transform ${showEncodings ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
-
-          {showEncodings && (
-            <div className="space-y-2 pt-2">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                    Short {useLegacy && <span className="text-[10px]">(legacy)</span>}
-                  </label>
-                  <button
-                    onClick={() => copyToClipboard(shortForm)}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    Copy
-                  </button>
-                </div>
-                <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded font-mono text-sm text-center text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700">
-                  {shortForm}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                    Base64
-                  </label>
-                  <button
-                    onClick={() => copyToClipboard(base64Form)}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    Copy
-                  </button>
-                </div>
-                <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded font-mono text-sm text-center text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700">
-                  {base64Form}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                    Base32
-                  </label>
-                  <button
-                    onClick={() => copyToClipboard(base32Form)}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    Copy
-                  </button>
-                </div>
-                <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded font-mono text-sm text-center text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700">
-                  {base32Form}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                    Base85
-                  </label>
-                  <button
-                    onClick={() => copyToClipboard(base85Form)}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    Copy
-                  </button>
-                </div>
-                <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded font-mono text-sm text-center text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700">
-                  {base85Form}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                    Hex
-                  </label>
-                  <button
-                    onClick={() => copyToClipboard(hexForm)}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    Copy
-                  </button>
-                </div>
-                <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded font-mono text-sm text-center text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700">
-                  {hexForm}
-                </div>
-              </div>
-
-              {onLegacyChange && (
-                <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <label className="flex items-center gap-2 text-xs cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={useLegacy}
-                      onChange={(e) => onLegacyChange(e.target.checked)}
-                      className="cursor-pointer"
-                    />
-                    <span className="text-gray-600 dark:text-gray-400">Use legacy ShortUUID format</span>
-                  </label>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="tool-container">
