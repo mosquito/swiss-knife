@@ -85,7 +85,7 @@ A **100% client-side** developer toolkit running entirely in your browser with *
 - Unix timestamp to human-readable conversion
 - Seconds and millisecond timestamp detection
 - Searchable IANA timezone and representative-city database with localized country-name lookup
-- Interactive SVG world map with priority-aware marker thinning, zoom, pointer/touch panning, geolocation, interactive city tooltips, and stable country highlighting
+- Interactive SVG world map with civil-time-rule-aware marker thinning, zoom, pointer/touch panning, geolocation, interactive city tooltips, and stable country highlighting
 - DST-aware wall-clock parsing with explicit handling for skipped and repeated local times
 - Per-year DST/offset transition rules with human-readable weekday/month patterns, including non-hour shifts
 - Five color-linked timezone clocks and map pins, with a promotion queue and tooltip Pin/Unpin controls

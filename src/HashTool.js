@@ -25,7 +25,7 @@ const HashTool = () => {
   const decodeState = useMemo(() => (str) => str !== undefined ? str : undefined, []);
 
   const computeAll = async (text) => {
-    if (!text) { setResults({}); return; }
+    if (text === undefined || text === null) { setResults({}); return; }
     setIsComputing(true);
     setError('');
     try {
