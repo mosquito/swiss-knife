@@ -119,6 +119,11 @@
   @apply block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1;
 }
 
+.form-control-text {
+  font-size: var(--form-control-font-size);
+  line-height: var(--form-control-line-height);
+}
+
 /* Cards & Panels */
 .card {
   @apply bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-4;

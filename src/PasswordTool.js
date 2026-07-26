@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { UndoableInput } from './UndoableFields';
 import { passwordDictionary } from './passwordDictionary';
 import { generatePassword } from './utils';
 import { useStoredSettings } from './hooks';
@@ -261,30 +262,30 @@ const PasswordTool = () => {
                 <div className="px-4 pb-4 space-y-3">
                   <div className="flex flex-wrap gap-3 text-xs">
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={useNumbers} onChange={e => setUseNumbers(e.target.checked)} className="cursor-pointer" />
+                      <UndoableInput type="checkbox" checked={useNumbers} onChange={e => setUseNumbers(e.target.checked)} className="cursor-pointer" />
                       <span>Include number (random position)</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={useSymbols} onChange={e => setUseSymbols(e.target.checked)} className="cursor-pointer" />
+                      <UndoableInput type="checkbox" checked={useSymbols} onChange={e => setUseSymbols(e.target.checked)} className="cursor-pointer" />
                       <span>Include symbol (random position)</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={urlSafe} onChange={e => setUrlSafe(e.target.checked)} className="cursor-pointer" />
+                      <UndoableInput type="checkbox" checked={urlSafe} onChange={e => setUrlSafe(e.target.checked)} className="cursor-pointer" />
                       <span>URL-safe only (- _ . ~ +)</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={useUpperCase} onChange={e => setUseUpperCase(e.target.checked)} disabled={onlyLowerCase} className="cursor-pointer disabled:opacity-50" />
+                      <UndoableInput type="checkbox" checked={useUpperCase} onChange={e => setUseUpperCase(e.target.checked)} disabled={onlyLowerCase} className="cursor-pointer disabled:opacity-50" />
                       <span>Use upper case</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={onlyLowerCase} onChange={e => setOnlyLowerCase(e.target.checked)} className="cursor-pointer" />
+                      <UndoableInput type="checkbox" checked={onlyLowerCase} onChange={e => setOnlyLowerCase(e.target.checked)} className="cursor-pointer" />
                       <span>Only lower case</span>
                     </label>
                   </div>
                   <div className="flex flex-wrap gap-3 text-xs">
                     <label className="flex items-center gap-2">
                       <span className="text-gray-600 dark:text-gray-300">Min words</span>
-                      <input
+                      <UndoableInput
                         type="number"
                         min={2}
                         max={10}
@@ -300,7 +301,7 @@ const PasswordTool = () => {
                     </label>
                     <label className="flex items-center gap-2">
                       <span className="text-gray-600 dark:text-gray-300">Max words</span>
-                      <input
+                      <UndoableInput
                         type="number"
                         min={2}
                         max={10}
@@ -318,7 +319,7 @@ const PasswordTool = () => {
                   <div className="flex flex-wrap gap-3 text-xs">
                     <label className="flex items-center gap-2">
                       <span className="text-gray-600 dark:text-gray-300">Number min</span>
-                      <input
+                      <UndoableInput
                         type="number"
                         min={0}
                         value={minNumber}
@@ -334,7 +335,7 @@ const PasswordTool = () => {
                     </label>
                     <label className="flex items-center gap-2">
                       <span className="text-gray-600 dark:text-gray-300">Number max</span>
-                      <input
+                      <UndoableInput
                         type="number"
                         min={0}
                         value={maxNumber}
@@ -352,7 +353,7 @@ const PasswordTool = () => {
                   <div className="space-y-2 pt-1">
                     <h4 className="text-sm font-semibold">Separators</h4>
                     <div className="flex flex-wrap items-center gap-3 text-xs">
-                      <input
+                      <UndoableInput
                         type="text"
                         value={separatorsInput}
                         onChange={(e)=> setSeparatorsInput(e.target.value)}
@@ -366,7 +367,7 @@ const PasswordTool = () => {
                         Reset defaults
                       </button>
                       <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked={useMixedSeparators} onChange={e => setUseMixedSeparators(e.target.checked)} className="cursor-pointer" />
+                        <UndoableInput type="checkbox" checked={useMixedSeparators} onChange={e => setUseMixedSeparators(e.target.checked)} className="cursor-pointer" />
                         <span>Mixed (vary within password)</span>
                       </label>
                     </div>

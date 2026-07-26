@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { UndoableInput, UndoableSelect } from './UndoableFields';
 import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import Base64QuerySync from './Base64QuerySync';
 import HistoryList from './HistoryList';
@@ -251,7 +252,7 @@ const BarcodeTool = () => {
                 {dropdownOpen && (
                   <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-96 overflow-hidden flex flex-col">
                     <div className="p-2 border-b border-gray-200 dark:border-gray-700">
-                      <input
+                      <UndoableInput
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
                         placeholder="Search barcode types..."
@@ -307,7 +308,7 @@ const BarcodeTool = () => {
             {SYMS.find(s => s.value === type)?.examples && SYMS.find(s => s.value === type)?.examples.length > 0 && (
               <div>
                 <label className="label">Examples</label>
-                <select
+                <UndoableSelect
                   onChange={(e) => {
                     if (e.target.value) {
                       setText(e.target.value);
@@ -321,7 +322,7 @@ const BarcodeTool = () => {
                   {SYMS.find(s => s.value === type)?.examples.map((ex, idx) => (
                     <option key={idx} value={ex.value} className="text-gray-900 dark:text-gray-100">{ex.label}</option>
                   ))}
-                </select>
+                </UndoableSelect>
               </div>
             )}
             <ImageOutputControls

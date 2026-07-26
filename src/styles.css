@@ -11,6 +11,8 @@
 
 :root {
   --sidebar-width: 256px;
+  --form-control-font-size: 0.875rem;
+  --form-control-line-height: 1.25rem;
 }
 
 .code-editor .cm-theme,
@@ -20,7 +22,8 @@
 
 .code-editor .cm-editor {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
+  font-size: var(--form-control-font-size);
+  line-height: var(--form-control-line-height);
 }
 
 .code-editor .cm-scroller {

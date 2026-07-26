@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { UndoableInput, UndoableSelect } from './UndoableFields';
 import HistoryList from './HistoryList';
 import { copyText } from './browserActions';
 import { readLatestHistoryValue } from './historyStorage';
@@ -191,7 +192,7 @@ const WifiQRTool = () => {
               <label className="text-xs font-bold text-gray-600 dark:text-gray-400">
                 Network Name (SSID) <span className="text-red-500">*</span>
               </label>
-              <input
+              <UndoableInput
                 value={ssid}
                 onChange={(e) => setSsid(e.target.value)}
                 placeholder="MyWiFiNetwork"
@@ -205,7 +206,7 @@ const WifiQRTool = () => {
                 Password
               </label>
               <div className="relative mt-1">
-                <input
+                <UndoableInput
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -227,7 +228,7 @@ const WifiQRTool = () => {
               <label className="text-xs font-bold text-gray-600 dark:text-gray-400">
                 Security Type
               </label>
-              <select
+              <UndoableSelect
                 value={security}
                 onChange={(e) => setSecurity(e.target.value)}
                 className="mt-1 w-full text-sm px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-hidden focus:ring-2 focus:ring-jwtBlue"
@@ -235,12 +236,12 @@ const WifiQRTool = () => {
                 <option value="WPA">WPA/WPA2/WPA3</option>
                 <option value="WEP">WEP (Legacy)</option>
                 <option value="nopass">None (Open Network)</option>
-              </select>
+              </UndoableSelect>
             </div>
 
             <div>
               <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
+                <UndoableInput
                   type="checkbox"
                   checked={hidden}
                   onChange={(e) => setHidden(e.target.checked)}
@@ -252,7 +253,7 @@ const WifiQRTool = () => {
 
             <div>
               <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
+                <UndoableInput
                   type="checkbox"
                   checked={printPassword}
                   onChange={(e) => setPrintPassword(e.target.checked)}
@@ -274,7 +275,7 @@ const WifiQRTool = () => {
                 WiFi String
               </div>
               <div className="flex items-center gap-2">
-                <code className="flex-1 text-[10px] font-mono px-2 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded break-all">
+                <code className="form-control-text flex-1 font-mono px-2 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded break-all">
                   {generateWifiString()}
                 </code>
                 <button

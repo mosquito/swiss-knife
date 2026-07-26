@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { UndoableInput, UndoableSelect } from './UndoableFields';
 import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import Base64QuerySync from './Base64QuerySync';
 import { ShortUUID } from './shortuuid';
@@ -92,7 +93,7 @@ const UuidRow = ({ version, uuid, name, namespaceName, customNamespace, onNameCh
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
               Namespace Type
             </label>
-            <select
+            <UndoableSelect
               value={namespaceName}
               onChange={(e) => onNamespaceChange(e.target.value)}
               className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -102,14 +103,14 @@ const UuidRow = ({ version, uuid, name, namespaceName, customNamespace, onNameCh
               <option value="OID">OID (6ba7b812...)</option>
               <option value="X500">X500 (6ba7b814...)</option>
               <option value="CUSTOM">Custom UUID</option>
-            </select>
+            </UndoableSelect>
           </div>
           {namespaceName === 'CUSTOM' && (
             <div>
               <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                 Custom Namespace UUID
               </label>
-              <input
+              <UndoableInput
                 type="text"
                 value={customNamespace}
                 onChange={(e) => onCustomNamespaceChange(e.target.value)}
@@ -129,7 +130,7 @@ const UuidRow = ({ version, uuid, name, namespaceName, customNamespace, onNameCh
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
               Name
             </label>
-            <input
+            <UndoableInput
               type="text"
               value={name}
               onChange={(e) => onNameChange(e.target.value)}
@@ -265,7 +266,7 @@ const UuidRow = ({ version, uuid, name, namespaceName, customNamespace, onNameCh
             {onLegacyChange && (
               <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                 <label className="flex items-center gap-2 text-xs cursor-pointer">
-                  <input
+                  <UndoableInput
                     type="checkbox"
                     checked={useLegacy}
                     onChange={(e) => onLegacyChange(e.target.checked)}
@@ -636,7 +637,7 @@ const UuidTool = () => {
 
             <div className="flex items-start justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
               <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
+                <UndoableInput
                   type="checkbox"
                   checked={converterLegacy}
                   onChange={(e) => handleConverterLegacyToggle(e.target.checked)}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { UndoableInput } from './UndoableFields';
 import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import CodeEditor from './CodeEditor';
 import { decodeJWT, signJWT, verifyJWT, generateKeysAsync, isPrivateKey, extractPublicFromPrivateAsync } from './utils';
@@ -224,10 +225,13 @@ const JwtTool = () => {
         setTimeout(() => setTokenUpdating(false), 300);
       }
       isUpdatingJson.current = false;
-    } catch(e){
-      // Invalid JSON - revert to last valid state and reformat
-      if(type === 'header') setHeaderText(JSON.stringify(header, null, 2));
-      else setPayloadText(JSON.stringify(payload, null, 2));
+    } catch (error) {
+      const message = `Invalid JSON: ${error.message || 'Unable to parse value'}`;
+      setDecodeResult((previous) => (
+        type === 'header'
+          ? { ...previous, headerError: message, headerRaw: val }
+          : { ...previous, payloadError: message, payloadRaw: val }
+      ));
     }
   };
 
@@ -338,7 +342,7 @@ const JwtTool = () => {
         <div className="p-6 flex flex-col flex-1 min-h-0">
           <div className="flex justify-between items-center mb-4 shrink-0">
             <h2 className="text-lg font-bold">Encoded</h2>
-            <button onClick={handleCopyToken} disabled={!token} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-[10px] font-bold disabled:opacity-50 disabled:cursor-not-allowed" title="Copy Token">
+            <button onClick={handleCopyToken} disabled={!token} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed" title="Copy Token">
               <span>{copiedToken ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
@@ -363,7 +367,7 @@ const JwtTool = () => {
             <div className="flex justify-between items-center mb-1">
               <div className="text-xs text-gray-500 font-bold">HEADER:</div>
               <div className="flex items-center gap-2">
-                <button onClick={handleCopyHeader} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-[10px] font-bold" title="Copy Header">
+                <button onClick={handleCopyHeader} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-xs font-bold" title="Copy Header">
                   <span>{copiedHeader ? 'Copied' : 'Copy'}</span>
                 </button>
                 {!isEditable && <span className="text-[10px] text-gray-400 font-bold uppercase">Read Only</span>}
@@ -388,10 +392,10 @@ const JwtTool = () => {
             <div className="flex justify-between items-center mb-1">
               <div className="text-xs text-gray-500 font-bold">PAYLOAD:</div>
               <div className="flex items-center gap-2">
-                <button onClick={() => setShowPayloadHistory(true)} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-[10px] font-bold" title="View History">
+                <button onClick={() => setShowPayloadHistory(true)} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-xs font-bold" title="View History">
                   <span>History</span>
                 </button>
-                <button onClick={handleCopyPayload} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-[10px] font-bold" title="Copy Payload">
+                <button onClick={handleCopyPayload} className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-xs font-bold" title="Copy Payload">
                   <span>{copiedPayload ? 'Copied' : 'Copy'}</span>
                 </button>
                 {!isEditable && <span className="text-[10px] text-gray-400 font-bold uppercase">Read Only</span>}
@@ -436,7 +440,7 @@ const JwtTool = () => {
                         <div className="text-[10px] text-gray-500 dark:text-gray-400">{description}</div>
                       </div>
                       <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                        <input
+                        <UndoableInput
                           type="datetime-local"
                           value={unixToDatetimeLocal(payload[key])}
                           onChange={(e) => handleTimeClaimChange(key, e.target.value)}
@@ -476,7 +480,7 @@ const JwtTool = () => {
             )}
           </div>
           <div className="mb-6">
-            <div className="flex justify-between items-end mb-1"><div className="text-xs text-gray-500 font-bold">VERIFY SIGNATURE</div><button disabled={isGenerating} onClick={async()=>{ const k = await applyNewKeys(currentAlg); const t = signJWT(header,payload,k); if(t) setToken(t); }} className="text-[10px] bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50">Generate New Keys</button></div>
+            <div className="flex justify-between items-end mb-1"><div className="text-xs text-gray-500 font-bold">VERIFY SIGNATURE</div><button disabled={isGenerating} onClick={async()=>{ const k = await applyNewKeys(currentAlg); const t = signJWT(header,payload,k); if(t) setToken(t); }} className="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50">Generate New Keys</button></div>
             <div className="bg-white dark:bg-gray-800 border-l-4 border-jwtBlue rounded shadow-sm p-4 font-mono text-sm break-all">
               <div className="text-jwtBlue mb-4 select-none">{currentAlg} (<br/>base64UrlEncode(header)+'.'+base64UrlEncode(payload),<br/><span className="text-gray-500 dark:text-gray-400">{isHmac ? 'your-256-bit-secret' : 'your-private-or-public-key'}</span><br/>)</div>
               <div className={`flex flex-col ${derivedPublicKey ? 'xl:flex-row' : ''} w-full bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 overflow-hidden`}>

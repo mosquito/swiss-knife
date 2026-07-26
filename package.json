@@ -1,15 +1,18 @@
 {
   "name": "swiss-knife",
   "version": "1.0.0",
+  "packageManager": "bun@1.3.14",
   "description": "A 100% client-side developer toolkit running entirely in your browser with zero network access. No data ever leaves your device.",
   "main": "src/index.js",
   "sideEffects": [
     "*.css"
   ],
   "scripts": {
-    "start": "webpack serve --mode development --open",
-    "build": "webpack --mode production && webpack --config webpack.offline.config.js",
-    "postbuild": "node scripts/generateFavicons.js && node scripts/compress.js"
+    "start": "bun --bun webpack serve --mode development --open",
+    "build": "bun run build:web && bun run build:offline",
+    "build:web": "bun --bun webpack --mode production",
+    "build:offline": "bun --bun webpack --config webpack.offline.config.js",
+    "postbuild": "bun scripts/generateFavicons.js && bun scripts/compress.js"
   },
   "dependencies": {
     "@codemirror/lang-html": "^6.4.11",

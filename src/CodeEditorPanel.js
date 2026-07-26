@@ -20,7 +20,7 @@ const CodeEditorPanel = ({
       {...editorProps}
     />
     {error && (
-      <div className="px-3 py-1 text-[10px] text-red-600 border-t border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 font-mono">
+      <div className="px-3 py-1 text-[11px] leading-4 text-red-600 border-t border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 font-mono">
         {error}
       </div>
     )}

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { UndoableSelect } from './UndoableFields';
 import Base64QuerySync from './Base64QuerySync';
 import { encodeBase32, decodeBase32, encodeBase64, decodeBase64, encodeBase85, decodeBase85, encodeHex, decodeHex } from './utils';
 import { useDebouncedEffect } from './hooks';
@@ -238,15 +239,15 @@ const EncodeDecodeTool = () => {
         <p className="text-xs text-gray-600 dark:text-gray-400">Transform text between Base64, Base32, Hex and URL encodings. All operations stay in your browser.</p>
         <div className="flex flex-wrap gap-2 text-xs items-center">
           <label className="flex items-center gap-1">Mode:
-            <select value={mode} onChange={e=>setMode(e.target.value)} className="px-2 py-1 rounded bg-gray-200 dark:bg-gray-700">
+            <UndoableSelect value={mode} onChange={e=>setMode(e.target.value)} className="px-2 py-1 rounded bg-gray-200 dark:bg-gray-700">
               <option value="encode">Encode</option>
               <option value="decode">Decode</option>
-            </select>
+            </UndoableSelect>
           </label>
           <label className="flex items-center gap-1">Format:
-            <select value={format} onChange={e=>setFormat(e.target.value)} className="px-2 py-1 rounded bg-gray-200 dark:bg-gray-700">
+            <UndoableSelect value={format} onChange={e=>setFormat(e.target.value)} className="px-2 py-1 rounded bg-gray-200 dark:bg-gray-700">
               {formats.map(f=> <option key={f} value={f}>{f.toUpperCase()}</option>)}
-            </select>
+            </UndoableSelect>
           </label>
           <button onClick={handleSwap} className="btn-primary btn-sm">Swap</button>
           <button onClick={handleClear} className="btn-secondary btn-sm">Clear</button>
@@ -255,21 +256,21 @@ const EncodeDecodeTool = () => {
         <div className="grid md:grid-cols-2 gap-4">
           <CodeEditorPanel
             className="h-[55vh] md:h-[60vh]"
-            header={<span className="text-[11px] font-bold">Input ({mode === 'encode' ? 'raw text' : 'encoded text'})</span>}
-            actions={<button onClick={()=>handleCopy(input)} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>}
+            header={<span className="text-xs font-bold">Input ({mode === 'encode' ? 'raw text' : 'encoded text'})</span>}
+            actions={<button onClick={()=>handleCopy(input)} className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>}
             value={input}
             onChange={setInput}
             placeholder={mode==='encode'? 'Type text to encode' : 'Paste encoded text to decode'}
           />
           <CodeEditorPanel
             className="h-[55vh] md:h-[60vh]"
-            header={<span className="text-[11px] font-bold">Output ({mode === 'encode' ? 'encoded text' : 'decoded text'}){isBinary && ' (binary detected)'}</span>}
+            header={<span className="text-xs font-bold">Output ({mode === 'encode' ? 'encoded text' : 'decoded text'}){isBinary && ' (binary detected)'}</span>}
             actions={mode === 'decode' && isBinary ? (
                 <div className="flex gap-1">
-                  <button onClick={toggleOutputMode} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">
+                  <button onClick={toggleOutputMode} className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">
                     {outputMode === 'text' ? 'Hex' : 'Text'}
                   </button>
-                  <button onClick={handleDownload} className="text-[10px] px-2 py-1 rounded bg-blue-500 text-white hover:bg-blue-600">
+                  <button onClick={handleDownload} className="text-xs px-2 py-1 rounded bg-blue-500 text-white hover:bg-blue-600">
                     Download
                   </button>
                 </div>

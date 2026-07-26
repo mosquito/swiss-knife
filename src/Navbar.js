@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { UndoableInput } from './UndoableFields';
 import { allTools, toolCategories } from './toolsRegistry';
 import { useStoredState } from './hooks';
 
@@ -81,7 +82,7 @@ const Navbar = ({ activeTool, onSelect }) => {
 
           {/* Search */}
           <div className="px-4 pb-3 border-b border-gray-200 dark:border-gray-700">
-            <input
+            <UndoableInput
               type="text"
               placeholder="Search tools..."
               value={searchQuery}
@@ -176,7 +177,7 @@ const Navbar = ({ activeTool, onSelect }) => {
           {/* Search */}
           {!isSidebarCollapsed && (
             <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-              <input
+              <UndoableInput
                 type="text"
                 placeholder="Search..."
                 value={searchQuery}

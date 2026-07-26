@@ -1,4 +1,5 @@
 import React from 'react';
+import { UndoableInput } from './UndoableFields';
 
 const formatButtonClass = (active) => (
   `flex-1 px-3 py-2 text-xs rounded border transition ${
@@ -36,7 +37,7 @@ const ImageOutputControls = ({
     {outputFormat === 'png' && (
       <div>
         <label className="label">PNG Scale: {pngScale}x</label>
-        <input
+        <UndoableInput
           type="range"
           min="1"
           max="5"

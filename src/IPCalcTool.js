@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { UndoableInput } from './UndoableFields';
 import Base64QuerySync from './Base64QuerySync';
 import HistoryList from './HistoryList';
 import { encodeBigIntToBase32, encodeBigIntToBase64, encodeBigIntToBase85 } from './utils';
@@ -601,7 +602,7 @@ const IPCalcTool = () => {
         <div className="grid md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
             <label className="text-xs font-bold text-gray-600 dark:text-gray-400">IP Address / CIDR</label>
-            <input
+            <UndoableInput
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="e.g., 192.168.1.0/24 or 2001:db8::/32"
@@ -612,7 +613,7 @@ const IPCalcTool = () => {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-xs font-bold text-gray-600 dark:text-gray-400">NAT64 Prefix</label>
-            <input
+            <UndoableInput
               value={nat64PrefixInput}
               onChange={(e) => setNat64PrefixInput(e.target.value)}
               placeholder="e.g., 64:ff9b::/96"
@@ -727,7 +728,7 @@ const IPCalcTool = () => {
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">Check IP in Subnet</div>
               <div className="flex gap-2">
-                <input
+                <UndoableInput
                   value={checkIp}
                   onChange={(e) => setCheckIp(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCheckIp()}

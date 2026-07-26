@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { UndoableInput, UndoableSelect } from './UndoableFields';
 import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import bcrypt from 'bcryptjs';
 import { encodeBase64, decodeBase64, encodeCrypt64, generateSalt, generatePassword } from './utils';
@@ -206,7 +207,7 @@ const PasswordHashTool = () => {
                 Password
               </label>
               <div className="flex gap-2">
-                <input
+                <UndoableInput
                   type="text"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -228,7 +229,7 @@ const PasswordHashTool = () => {
               <label className="text-xs font-bold text-gray-600 dark:text-gray-400 block mb-1">
                 Hash Type
               </label>
-              <select
+              <UndoableSelect
                 value={hashType}
                 onChange={(e) => setHashType(e.target.value)}
                 className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded focus:outline-hidden focus:ring-2 focus:ring-jwtBlue"
@@ -238,7 +239,7 @@ const PasswordHashTool = () => {
                     {type.label} - {type.desc}
                   </option>
                 ))}
-              </select>
+              </UndoableSelect>
               {selectedType && (
                 <div className="mt-1 text-[10px] text-gray-500 dark:text-gray-400">
                   {selectedType.desc}
@@ -251,7 +252,7 @@ const PasswordHashTool = () => {
                 <label className="text-xs font-bold text-gray-600 dark:text-gray-400 block mb-1">
                   Iterations: {iterations.toLocaleString()}
                 </label>
-                <input
+                <UndoableInput
                   type="range"
                   min="10000"
                   max="1000000"
@@ -273,7 +274,7 @@ const PasswordHashTool = () => {
                 <label className="text-xs font-bold text-gray-600 dark:text-gray-400 block mb-1">
                   Rounds: {bcryptRounds}
                 </label>
-                <input
+                <UndoableInput
                   type="range"
                   min="4"
                   max="15"
@@ -292,7 +293,7 @@ const PasswordHashTool = () => {
 
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <input
+                <UndoableInput
                   type="checkbox"
                   id="useCustomSalt"
                   checked={useCustomSalt}
@@ -304,7 +305,7 @@ const PasswordHashTool = () => {
                 </label>
               </div>
               {useCustomSalt && (
-                <input
+                <UndoableInput
                   type="text"
                   value={customSalt}
                   onChange={(e) => setCustomSalt(e.target.value)}

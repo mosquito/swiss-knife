@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { UndoableSelect } from './UndoableFields';
 import Base64QuerySync from './Base64QuerySync';
 import YAML from 'yaml';
 import { useDebouncedEffect } from './hooks';
@@ -377,17 +378,17 @@ const DataFormatTool = () => {
             className="h-[60vh] md:h-[70vh]"
             header={(
               <div className="flex items-center gap-2">
-                <span className="font-bold text-[11px]">Source</span>
-                <select value={leftFormat} onChange={e=>setLeftFormat(e.target.value)} className="text-[11px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 focus:outline-hidden">
+                <span className="font-bold text-xs">Source</span>
+                <UndoableSelect value={leftFormat} onChange={e=>setLeftFormat(e.target.value)} className="text-[11px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 focus:outline-hidden">
                   <option value="json">JSON</option>
                   <option value="yaml">YAML</option>
                   <option value="toml">TOML</option>
                   <option value="xml">XML</option>
                   <option value="html">HTML</option>
-                </select>
+                </UndoableSelect>
               </div>
             )}
-            actions={<button onClick={()=>copyToClipboard(leftText)} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>}
+            actions={<button onClick={()=>copyToClipboard(leftText)} className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>}
             value={leftText}
             onChange={handleLeftChange}
             error={errorLeft}
@@ -397,17 +398,17 @@ const DataFormatTool = () => {
             className="h-[60vh] md:h-[70vh]"
             header={(
               <div className="flex items-center gap-2">
-                <span className="font-bold text-[11px]">Target</span>
-                <select value={rightFormat} onChange={e=>setRightFormat(e.target.value)} className="text-[11px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 focus:outline-hidden">
+                <span className="font-bold text-xs">Target</span>
+                <UndoableSelect value={rightFormat} onChange={e=>setRightFormat(e.target.value)} className="text-[11px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 focus:outline-hidden">
                   <option value="json">JSON</option>
                   <option value="yaml">YAML</option>
                   <option value="toml">TOML</option>
                   <option value="xml">XML</option>
                   <option value="html">HTML</option>
-                </select>
+                </UndoableSelect>
               </div>
             )}
-            actions={<button onClick={()=>copyToClipboard(rightText)} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>}
+            actions={<button onClick={()=>copyToClipboard(rightText)} className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>}
             value={rightText}
             onChange={handleRightChange}
             error={errorRight}

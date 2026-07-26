@@ -50,6 +50,8 @@ const CodeEditor = ({
         aria-label={ariaLabel}
         onBlur={onBlur}
         basicSetup={{
+          history: true,
+          historyKeymap: true,
           lineNumbers: true,
           foldGutter: true,
           highlightActiveLine: true,

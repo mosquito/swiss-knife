@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { UndoableInput, UndoableSelect } from './UndoableFields';
 import Base64QuerySync from './Base64QuerySync';
 import { copyText } from './browserActions';
 
@@ -453,7 +454,7 @@ const UnitsConverterTool = () => {
             Input
           </h3>
           <div className="flex flex-col lg:flex-row gap-2">
-            <input
+            <UndoableInput
               type={category === 'number' || category === 'storage' ? 'text' : 'number'}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
@@ -462,7 +463,7 @@ const UnitsConverterTool = () => {
               step="any"
               min={category === 'temperature' ? undefined : '0'}
             />
-            <select
+            <UndoableSelect
               value={inputUnit}
               onChange={(e) => setInputUnit(e.target.value)}
               className="select w-full lg:w-40"
@@ -472,10 +473,10 @@ const UnitsConverterTool = () => {
                   {unit.label}
                 </option>
               ))}
-            </select>
+            </UndoableSelect>
             {category === 'storage' && (
               <>
-                <select
+                <UndoableSelect
                   value={numberBase}
                   onChange={(e) => setNumberBase(e.target.value)}
                   className="select w-full lg:w-32"
@@ -484,15 +485,15 @@ const UnitsConverterTool = () => {
                   <option value="bin">BIN</option>
                   <option value="hex">HEX</option>
                   <option value="oct">OCT</option>
-                </select>
-                <select
+                </UndoableSelect>
+                <UndoableSelect
                   value={storageBase}
                   onChange={(e) => setStorageBase(e.target.value)}
                   className="select w-full lg:w-32"
                 >
                   <option value="binary">IEC</option>
                   <option value="decimal">SI</option>
-                </select>
+                </UndoableSelect>
               </>
             )}
           </div>

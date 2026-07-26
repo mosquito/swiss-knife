@@ -116,10 +116,12 @@ A **100% client-side** developer toolkit running entirely in your browser with *
 
 ## Quick Start
 
+Requires [Bun](https://bun.sh/) 1.3.14 or newer.
+
 ```bash
-npm install
-npm start      # Development server with hot reload
-npm run build  # Production build (outputs to dist/ and dist-offline/)
+bun install
+bun run start  # Development server with hot reload
+bun run build  # Production build (outputs to dist/ and dist-offline/)
 ```
 
 ### Build Outputs

@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { UndoableTextarea } from './UndoableFields';
 
 const TextareaWithLineNumbers = ({ 
   value, 
@@ -24,7 +25,7 @@ const TextareaWithLineNumbers = ({
   // Actually, we mostly care about manual scrolling.
   
   return (
-    <div className={`flex relative overflow-hidden ${className}`}>
+    <div className={`form-control-text flex relative overflow-hidden ${className}`}>
       <div
         ref={linesRef}
         className={`flex-none text-right select-none overflow-hidden line-numbers-gutter ${gutterClassName}`}
@@ -38,7 +39,7 @@ const TextareaWithLineNumbers = ({
           <div key={line}>{line}</div>
         ))}
       </div>
-      <textarea
+      <UndoableTextarea
         ref={textareaRef}
         value={value}
         onChange={onChange}

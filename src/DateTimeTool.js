@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { UndoableInput } from './UndoableFields';
 import Base64QuerySync from './Base64QuerySync';
 
 // Helper: format relative difference between a target date and now.
@@ -138,7 +139,7 @@ const DateTimeTool = () => {
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Timestamp → Date</span>
             </div>
-            <input
+            <UndoableInput
               value={tsInput}
               onChange={e=>setTsInput(e.target.value)}
               placeholder="Enter unix timestamp (seconds or ms)"
@@ -164,14 +165,14 @@ const DateTimeTool = () => {
               <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Date → Unix Timestamp</span>
             </div>
             <div className="flex gap-2">
-              <input
+              <UndoableInput
                 value={dtInput}
                 onChange={e=>setDtInput(e.target.value)}
                 placeholder="Enter date string (ISO, YYYY-MM-DD, RFC2822, etc.)"
                 className="flex-1 text-xs font-mono px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-hidden focus:ring-2 focus:ring-jwtPurple"
                 spellCheck="false"
               />
-              <input
+              <UndoableInput
                 type="datetime-local"
                 value={toDatetimeLocal(dtInput)}
                 onChange={e => setDtInput(new Date(e.target.value).toISOString())}
