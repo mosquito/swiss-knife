@@ -124,6 +124,567 @@
   line-height: var(--form-control-line-height);
 }
 
+.regex-highlight-layer {
+  box-sizing: border-box;
+  min-width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0.75rem;
+  color: transparent;
+  pointer-events: none;
+  tab-size: 2;
+}
+
+.regex-match-highlight {
+  color: transparent;
+  border-radius: 2px;
+}
+
+.regex-match-highlight-0 {
+  background: rgba(250, 204, 21, 0.38);
+}
+
+.regex-match-highlight-1 {
+  background: rgba(34, 211, 238, 0.34);
+}
+
+.regex-match-highlight-2 {
+  background: rgba(216, 58, 255, 0.25);
+}
+
+.regex-match-highlight-3 {
+  background: rgba(74, 222, 128, 0.3);
+}
+
+.regex-match-highlight-active {
+  outline: 2px solid rgba(0, 185, 241, 0.9);
+  outline-offset: -1px;
+}
+
+.dark .regex-match-highlight-0 {
+  background: rgba(250, 204, 21, 0.28);
+}
+
+.dark .regex-match-highlight-1 {
+  background: rgba(34, 211, 238, 0.26);
+}
+
+.dark .regex-match-highlight-2 {
+  background: rgba(216, 58, 255, 0.24);
+}
+
+.dark .regex-match-highlight-3 {
+  background: rgba(74, 222, 128, 0.23);
+}
+
+/* Date / Time timezone explorer */
+.timezone-selected-pill {
+  @apply inline-flex items-center gap-2 rounded-full border border-cyan-300 dark:border-cyan-700 bg-cyan-50 dark:bg-cyan-950/40 px-3 py-1.5 text-xs font-mono font-bold text-cyan-900 dark:text-cyan-200;
+}
+
+.timezone-selected-dot {
+  @apply block w-2 h-2 rounded-full bg-cyan-500;
+  box-shadow: 0 0 0 3px rgb(6 182 212 / 18%);
+}
+
+.timezone-explorer {
+  @apply overflow-hidden;
+}
+
+.timezone-explorer-header {
+  @apply flex flex-wrap items-start justify-between gap-3 mb-4;
+}
+
+.timezone-reference {
+  @apply inline-flex rounded border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900 p-0.5;
+}
+
+.timezone-reference button {
+  @apply rounded-sm px-3 py-1.5 text-xs font-bold text-gray-500 dark:text-gray-400 transition-colors;
+}
+
+.timezone-reference button:hover:not(:disabled) {
+  @apply text-gray-900 dark:text-white;
+}
+
+.timezone-reference button.is-active {
+  @apply bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm;
+}
+
+.timezone-reference button:disabled {
+  @apply opacity-35 cursor-not-allowed;
+}
+
+.timezone-picker-row {
+  @apply grid lg:grid-cols-[minmax(280px,1fr)_auto] items-end gap-3 mb-3;
+}
+
+.timezone-zone-picker {
+  @apply block min-w-0;
+}
+
+.timezone-zone-picker > span {
+  @apply block mb-1.5 text-[10px] uppercase tracking-wide font-bold text-gray-500 dark:text-gray-400;
+}
+
+.timezone-primary-clock {
+  @apply flex items-center justify-between lg:justify-end gap-6 min-w-[260px] rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 px-4 py-2;
+}
+
+.timezone-primary-clock > div {
+  @apply flex flex-col;
+}
+
+.timezone-primary-clock > div:last-child {
+  @apply text-right;
+}
+
+.timezone-primary-clock strong {
+  @apply text-base font-mono text-gray-900 dark:text-gray-100;
+}
+
+.timezone-primary-clock span {
+  @apply text-[10px] text-gray-500 dark:text-gray-400;
+}
+
+.timezone-map-shell {
+  @apply relative overflow-hidden rounded border border-gray-300 dark:border-gray-600 bg-blue-50 dark:bg-slate-950;
+}
+
+.timezone-map-controls {
+  @apply absolute z-10 top-3 right-3 flex items-center gap-1 rounded border border-gray-300 dark:border-gray-600 bg-white/95 dark:bg-slate-900/95 p-1 shadow-lg backdrop-blur-sm;
+}
+
+.timezone-map-controls button {
+  @apply flex items-center justify-center min-w-8 h-8 rounded-sm border border-transparent px-2 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-35 disabled:cursor-not-allowed;
+}
+
+.timezone-map-controls .timezone-map-reset {
+  @apply text-[10px] uppercase tracking-wide;
+}
+
+.timezone-map-controls .timezone-locate {
+  @apply gap-1.5 border-l-gray-200 dark:border-l-gray-700 pl-2.5 text-xs text-cyan-700 dark:text-cyan-300;
+}
+
+.timezone-locate svg {
+  @apply w-4 h-4;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  vector-effect: non-scaling-stroke;
+}
+
+.timezone-map {
+  @apply block w-full h-auto;
+  aspect-ratio: 2000 / 1001;
+  touch-action: none;
+}
+
+.timezone-map:not([viewBox="0 0 2000 1001"]) {
+  cursor: grab;
+}
+
+.timezone-map.is-dragging {
+  cursor: grabbing;
+}
+
+.timezone-gridline {
+  fill: none;
+  stroke: rgb(71 85 105 / 15%);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.timezone-land path {
+  fill: #b8c7b2;
+  stroke: #829278;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  transition: fill 120ms ease, stroke 120ms ease;
+}
+
+.timezone-land path.is-hovered {
+  fill: #67d7ea;
+  stroke: #0891b2;
+  stroke-width: 2.5;
+}
+
+.timezone-marker {
+  cursor: pointer;
+  outline: none;
+}
+
+.timezone-marker-dot {
+  fill: #334155;
+  stroke: white;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  transition: r 120ms ease, fill 120ms ease;
+}
+
+.timezone-marker:hover > .timezone-marker-dot,
+.timezone-marker:focus > .timezone-marker-dot {
+  fill: #d83aff;
+  r: 12px;
+}
+
+.timezone-marker.is-pinned > .timezone-marker-dot {
+  fill: var(--timezone-pin-color);
+  stroke-width: 2.5;
+}
+
+.timezone-marker.is-pinned:hover > .timezone-marker-dot,
+.timezone-marker.is-pinned:focus > .timezone-marker-dot {
+  fill: var(--timezone-pin-color);
+  filter: brightness(1.25);
+  r: 15px;
+}
+
+.timezone-marker.is-active > .timezone-marker-dot {
+  fill: #00b9f1;
+  stroke: #07111f;
+  stroke-width: 2;
+}
+
+.timezone-marker.is-active.is-pinned > .timezone-marker-dot {
+  fill: var(--timezone-pin-color);
+}
+
+.timezone-marker-pulse {
+  fill: none;
+  stroke: var(--timezone-pin-color, #00b9f1);
+  stroke-width: 3;
+  animation: timezone-pulse 2s ease-out infinite;
+}
+
+.timezone-current-location-ring {
+  fill: rgb(216 58 255 / 18%);
+  stroke: #d83aff;
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.timezone-current-location-dot {
+  fill: #d83aff;
+  stroke: white;
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+@keyframes timezone-pulse {
+  0% { opacity: 1; transform: scale(.45); }
+  80%, 100% { opacity: 0; transform: scale(1.35); }
+}
+
+.timezone-map-label rect {
+  fill: #0f172a;
+}
+
+.timezone-map-label text {
+  fill: white;
+  font: 700 24px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.timezone-city-tooltip rect {
+  fill: rgb(15 23 42 / 96%);
+  stroke: rgb(34 211 238 / 75%);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.timezone-city-tooltip-title {
+  fill: white;
+  font: 700 19px ui-sans-serif, system-ui, sans-serif;
+}
+
+.timezone-city-tooltip-zone {
+  fill: #a5f3fc;
+  font: 600 15px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.timezone-city-tooltip-meta {
+  fill: #cbd5e1;
+  font: 600 14px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.timezone-tooltip-pin {
+  cursor: pointer;
+  outline: none;
+}
+
+.timezone-tooltip-pin rect {
+  fill: #0891b2;
+  stroke: #67e8f9;
+}
+
+.timezone-tooltip-pin text {
+  fill: white;
+  font: 700 11px ui-sans-serif, system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.timezone-tooltip-pin:hover rect,
+.timezone-tooltip-pin:focus rect {
+  fill: #0e7490;
+}
+
+.timezone-tooltip-pin.is-pinned rect {
+  fill: #334155;
+  stroke: #64748b;
+}
+
+.timezone-tooltip-pin.is-pinned text {
+  fill: #cbd5e1;
+}
+
+.timezone-tooltip-pin.is-pinned:hover rect,
+.timezone-tooltip-pin.is-pinned:focus rect {
+  fill: #991b1b;
+  stroke: #fca5a5;
+}
+
+.timezone-tooltip-pin.is-pinned:hover text,
+.timezone-tooltip-pin.is-pinned:focus text {
+  fill: white;
+}
+
+.timezone-offset-label {
+  fill: rgb(15 23 42 / 62%);
+  font: 700 20px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.timezone-map-note {
+  @apply border-t border-blue-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900 px-3 py-2 text-[10px] text-gray-500 dark:text-gray-400;
+}
+
+.timezone-location-error {
+  @apply mt-2 rounded border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950/30 px-3 py-2 text-xs text-red-700 dark:text-red-300;
+}
+
+.timezone-location-note {
+  @apply mt-2 text-[10px] text-gray-500 dark:text-gray-400;
+}
+
+.timezone-rules {
+  @apply mt-3 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60;
+}
+
+.timezone-rules-heading {
+  @apply flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 dark:border-gray-700 px-3 py-2.5;
+}
+
+.timezone-rules-heading > div {
+  @apply flex flex-col;
+}
+
+.timezone-rules-heading strong {
+  @apply text-xs text-gray-900 dark:text-gray-100;
+}
+
+.timezone-rules-heading > div span {
+  @apply text-[10px] font-mono text-gray-500 dark:text-gray-400;
+}
+
+.timezone-rules-heading > span {
+  @apply rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide;
+}
+
+.timezone-rules-heading .observes-dst {
+  @apply bg-purple-100 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300;
+}
+
+.timezone-rules-heading .fixed-offset {
+  @apply bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300;
+}
+
+.timezone-transition-list {
+  @apply grid lg:grid-cols-2 gap-px bg-gray-200 dark:bg-gray-700;
+}
+
+.timezone-transition {
+  @apply grid grid-cols-[auto_1fr_auto] items-center gap-3 bg-white dark:bg-gray-900 px-3 py-3;
+}
+
+.timezone-transition > div {
+  @apply flex flex-col;
+}
+
+.timezone-transition > div:last-child {
+  @apply text-right;
+}
+
+.timezone-transition strong {
+  @apply text-[11px] font-mono text-gray-800 dark:text-gray-200;
+}
+
+.timezone-transition div span {
+  @apply text-[10px] font-mono text-gray-500 dark:text-gray-400;
+}
+
+.timezone-transition-direction {
+  @apply rounded px-2 py-1 text-[10px] font-bold whitespace-nowrap;
+}
+
+.timezone-transition-direction.forward {
+  @apply bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300;
+}
+
+.timezone-transition-direction.back {
+  @apply bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300;
+}
+
+.timezone-no-transitions {
+  @apply px-3 py-4 text-xs text-gray-600 dark:text-gray-300;
+}
+
+.timezone-rules-note {
+  @apply border-t border-gray-200 dark:border-gray-700 px-3 py-2 text-[10px] text-gray-500 dark:text-gray-400;
+}
+
+.dark #timezone-ocean stop:first-child {
+  stop-color: #17243a;
+}
+
+.dark #timezone-ocean stop:last-child {
+  stop-color: #0f172a;
+}
+
+.dark .timezone-gridline {
+  stroke: rgb(148 163 184 / 18%);
+}
+
+.dark .timezone-land path {
+  fill: #38473e;
+  stroke: #65766b;
+}
+
+.dark .timezone-land path.is-hovered {
+  fill: #155e75;
+  stroke: #67e8f9;
+}
+
+.dark .timezone-offset-label {
+  fill: rgb(226 232 240 / 64%);
+}
+
+.timezone-clocks {
+  @apply grid sm:grid-cols-2 xl:grid-cols-5 gap-2 mt-3;
+}
+
+.timezone-clock {
+  @apply relative flex items-center justify-between gap-3 min-w-0 overflow-hidden rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 p-3 text-left transition-colors;
+}
+
+.timezone-clock:hover {
+  @apply border-cyan-400 dark:border-cyan-600;
+}
+
+.timezone-clock.is-active {
+  @apply border-cyan-500 bg-cyan-50 dark:bg-cyan-950/30 ring-1 ring-cyan-400;
+}
+
+.timezone-clock-color {
+  @apply absolute inset-y-0 left-0 w-1;
+  background: var(--timezone-pin-color);
+}
+
+.timezone-clock-main {
+  @apply flex flex-col min-w-0;
+}
+
+.timezone-clock-main strong {
+  @apply text-lg leading-none font-mono;
+}
+
+.timezone-clock-main span {
+  @apply mt-1.5 text-[10px] truncate text-gray-600 dark:text-gray-400;
+}
+
+.timezone-clock-meta {
+  @apply flex flex-col items-end gap-1 text-[10px] font-mono text-gray-500;
+}
+
+.timezone-clock-meta [role="button"] {
+  @apply flex items-center justify-center w-5 h-5 rounded text-base leading-none hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950;
+}
+
+.timezone-pin-queue {
+  @apply mt-2 text-right text-[10px] font-mono text-gray-500 dark:text-gray-400;
+}
+
+.dst-overlap {
+  @apply mt-3 flex flex-wrap items-center justify-between gap-3 rounded border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-3;
+}
+
+.dst-overlap > div:first-child {
+  @apply flex flex-col;
+}
+
+.dst-overlap strong {
+  @apply text-xs text-amber-900 dark:text-amber-200;
+}
+
+.dst-overlap span {
+  @apply text-[10px] text-amber-700 dark:text-amber-400;
+}
+
+.dst-overlap-options {
+  @apply inline-flex rounded border border-amber-300 dark:border-amber-700 bg-white dark:bg-gray-900 p-0.5;
+}
+
+.dst-overlap-options button {
+  @apply rounded-sm px-2 py-1 text-[10px] font-mono font-bold text-amber-800 dark:text-amber-300;
+}
+
+.dst-overlap-options button.is-active {
+  @apply bg-amber-200 dark:bg-amber-800 text-amber-950 dark:text-white;
+}
+
+@media (max-width: 640px) {
+  .timezone-primary-clock {
+    @apply min-w-0;
+  }
+
+  .timezone-reference {
+    @apply w-full;
+  }
+
+  .timezone-reference button {
+    @apply flex-1 px-2;
+  }
+
+  .timezone-map-controls {
+    @apply top-2 right-2;
+  }
+
+  .timezone-map-controls button {
+    @apply min-w-7 h-7 px-1.5;
+  }
+
+  .timezone-map-controls .timezone-locate {
+    @apply text-[0];
+  }
+
+  .timezone-map-controls .timezone-locate svg {
+    @apply w-4 h-4;
+  }
+
+  .timezone-transition {
+    @apply grid-cols-[auto_1fr];
+  }
+
+  .timezone-transition > div:last-child {
+    @apply col-span-2 text-left pl-0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timezone-marker-pulse {
+    animation: none;
+  }
+}
+
 /* Cards & Panels */
 .card {
   @apply bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-4;

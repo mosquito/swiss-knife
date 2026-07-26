@@ -84,6 +84,25 @@
 .icon-cancel { background-position: -360px 0; }
 .icon-save { background-position: -384px 0; }
 
+.icon-regex {
+  background-image: none;
+  position: relative;
+}
+
+.icon-regex::after {
+  content: '.*';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #111827;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: -2px;
+}
+
 @keyframes barcode-entrance {
   0% {
     opacity: 0;

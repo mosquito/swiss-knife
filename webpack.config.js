@@ -25,6 +25,10 @@ module.exports = {
         type: 'asset/inline',
       },
       {
+        test: /\.svg$/i,
+        type: 'asset/source',
+      },
+      {
         test: /\.wasm$/,
         type: 'webassembly/async',
       },
@@ -53,7 +57,7 @@ module.exports = {
       filename: 'index.html',
       inject: 'body',
       csp: process.env.NODE_ENV === 'production'
-        ? "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; frame-src 'none'; object-src 'none';"
+        ? "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; frame-src 'none'; object-src 'none';"
         : false
     }),
     new CopyWebpackPlugin({

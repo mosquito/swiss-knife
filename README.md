@@ -19,6 +19,7 @@ A **100% client-side** developer toolkit running entirely in your browser with *
 | **JWT** | Encode/decode/verify JSON Web Tokens with time claims picker |
 | **Hashes** | Compute cryptographic hashes in multiple output formats |
 | **Encode/Decode** | Convert data between various encoding formats |
+| **Regex Lab** | Test, explain and safely execute JavaScript regular expressions |
 | **Data Formats** | Transform and format structured data |
 | **Barcodes** | Generate and scan various barcode formats |
 | **IP Calculator** | IPv4/IPv6 subnet calculations and conversions |
@@ -51,6 +52,17 @@ A **100% client-side** developer toolkit running entirely in your browser with *
 - Bidirectional conversion
 - Auto-detection of input format
 
+### Regex Lab
+- Native JavaScript / ECMAScript 2025 regular expression flavor
+- Live match highlighting with capture groups, named groups and source positions
+- Match, substitution, list, unit test and code generation modes
+- JavaScript, Python and Go code generation with compatibility diagnostics
+- Python-style named groups (`(?P<name>...)`) and backreferences (`(?P=name)`)
+- AST-based token explanation and searchable quick reference
+- Heuristic backtracking risk analysis
+- Timeout-protected Web Worker execution for unsafe expressions
+- Restorable workspace history, shareable local URL state and field-level undo
+
 ### Data Formats Tool
 - JSON to YAML conversion and vice versa
 - XML/HTML formatting and minification
@@ -71,8 +83,12 @@ A **100% client-side** developer toolkit running entirely in your browser with *
 
 ### Date/Time Tool
 - Unix timestamp to human-readable conversion
-- Support for seconds, milliseconds, microseconds
-- Timezone selection
+- Seconds and millisecond timestamp detection
+- Searchable IANA timezone and representative-city database with localized country-name lookup
+- Interactive SVG world map with priority-aware marker thinning, zoom, pointer/touch panning, geolocation, interactive city tooltips, and stable country highlighting
+- DST-aware wall-clock parsing with explicit handling for skipped and repeated local times
+- Per-year DST/offset transition rules with human-readable weekday/month patterns, including non-hour shifts
+- Five color-linked timezone clocks and map pins, with a promotion queue and tooltip Pin/Unpin controls
 - Current time with live updates
 
 ### Crypto Tool

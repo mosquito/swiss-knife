@@ -11,6 +11,7 @@ import PasswordHashTool from './PasswordHashTool';
 import UuidTool from './UuidTool';
 import WifiQRTool from './WifiQRTool';
 import UnitsConverterTool from './UnitsConverterTool';
+import RegexTool from './RegexTool';
 
 export const toolCategories = [
   {
@@ -25,6 +26,7 @@ export const toolCategories = [
   {
     name: 'Encoding',
     tools: [
+      { id: 'regex', label: 'Regex Lab', icon: 'icon-regex', component: RegexTool },
       { id: 'encode', label: 'Encode / Decode', icon: 'icon-cycled-arrows', component: EncodeDecodeTool },
       { id: 'barcode', label: 'Barcodes', icon: 'icon-barcode', component: BarcodeTool },
       { id: 'format', label: 'Data Format', icon: 'icon-nodes', component: DataFormatTool },

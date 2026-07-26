@@ -6,6 +6,8 @@ import { javascript } from '@codemirror/lang-javascript';
 import { json } from '@codemirror/lang-json';
 import { xml } from '@codemirror/lang-xml';
 import { yaml } from '@codemirror/lang-yaml';
+import { python } from '@codemirror/lang-python';
+import { go } from '@codemirror/lang-go';
 import { toml } from '@codemirror/legacy-modes/mode/toml';
 import { useDarkMode } from './hooks';
 
@@ -14,6 +16,8 @@ const languageExtension = (language) => {
     case 'html': return html();
     case 'javascript': return javascript({ jsx: true });
     case 'json': return json();
+    case 'python': return python();
+    case 'go': return go();
     case 'toml': return StreamLanguage.define(toml);
     case 'xml': return xml();
     case 'yaml': return yaml();
@@ -25,6 +29,7 @@ const CodeEditor = ({
   ariaLabel = 'Code editor',
   className = '',
   language = 'plain',
+  lineWrapping = true,
   onBlur,
   onChange,
   placeholder,
@@ -33,8 +38,11 @@ const CodeEditor = ({
 }) => {
   const isDarkMode = useDarkMode();
   const extensions = useMemo(
-    () => [languageExtension(language), EditorView.lineWrapping],
-    [language],
+    () => [
+      languageExtension(language),
+      ...(lineWrapping ? [EditorView.lineWrapping] : []),
+    ],
+    [language, lineWrapping],
   );
 
   return (

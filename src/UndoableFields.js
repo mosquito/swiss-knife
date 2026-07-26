@@ -224,7 +224,18 @@ const createUndoableField = (tagName) => {
     };
 
     const captureInitialValue = (event) => {
-      getHistory(event.currentTarget);
+      const field = event.currentTarget;
+      const history = getHistory(field);
+      const actual = snapshotField(field);
+      const recorded = history.entries[history.index];
+      if (sameValue(actual, recorded)) return;
+
+      history.entries.splice(history.index + 1);
+      history.entries.push(actual);
+      if (history.entries.length > HISTORY_LIMIT) history.entries.shift();
+      history.index = history.entries.length - 1;
+      history.lastInputAt = 0;
+      history.lastInputType = '';
     };
 
     return React.createElement(tagName, {

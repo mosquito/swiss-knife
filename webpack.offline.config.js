@@ -32,6 +32,10 @@ module.exports = {
         test: /\.(png|jpe?g|gif)$/i,
         type: 'asset/inline',
       },
+      {
+        test: /\.svg$/i,
+        type: 'asset/source',
+      },
     ],
   },
   resolve: { 
@@ -54,7 +58,7 @@ module.exports = {
       filename: 'index.html',
       inject: 'body',
       faviconDataUri: faviconDataUri,
-      csp: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; frame-src 'none'; object-src 'none';",
+      csp: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; frame-src 'none'; object-src 'none';",
       minify: {
         collapseWhitespace: true,
         removeComments: true,
