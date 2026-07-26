@@ -43,7 +43,7 @@ const TextareaWithLineNumbers = ({
         value={value}
         onChange={onChange}
         onScroll={handleScroll}
-        className={`flex-1 resize-none focus:outline-none ${textareaClassName}`}
+        className={`flex-1 resize-none focus:outline-hidden ${textareaClassName}`}
         style={{
             fontFamily: 'inherit',
             fontSize: 'inherit',

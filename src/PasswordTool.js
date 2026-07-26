@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { passwordDictionary } from './passwordDictionary';
 import { generatePassword } from './utils';
+import { useStoredSettings } from './hooks';
+import { copyText } from './browserActions';
 
 const PasswordTool = () => {
   const [passwords, setPasswords] = useState([]);
@@ -107,36 +109,27 @@ const PasswordTool = () => {
     return { minBits, maxBits, text, rangeLabel };
   }, [passwordDictionary.length, onlyLowerCase, useUpperCase, separatorsInput, useNumbers, useSymbols, useMixedSeparators, minWords, maxWords, urlSafe, minNumber, maxNumber]);
 
-  // Load saved toggles on mount
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('password_generator_toggles');
-      if (raw) {
-        const saved = JSON.parse(raw);
-        if (typeof saved.useNumbers === 'boolean') setUseNumbers(saved.useNumbers);
-        if (typeof saved.useSymbols === 'boolean') setUseSymbols(saved.useSymbols);
-        if (typeof saved.useUpperCase === 'boolean') setUseUpperCase(saved.useUpperCase);
-        if (typeof saved.onlyLowerCase === 'boolean') setOnlyLowerCase(saved.onlyLowerCase);
-        if (typeof saved.urlSafe === 'boolean') setUrlSafe(saved.urlSafe);
-        if (typeof saved.minNumber === 'number') setMinNumber(Math.max(0, saved.minNumber));
-        if (typeof saved.maxNumber === 'number') setMaxNumber(Math.max(0, saved.maxNumber));
-        if (typeof saved.separatorsInput === 'string') setSeparatorsInput(saved.separatorsInput);
-        if (typeof saved.useMixedSeparators === 'boolean') setUseMixedSeparators(saved.useMixedSeparators);
-        if (typeof saved.minWords === 'number') setMinWords(Math.max(2, Math.min(10, saved.minWords)));
-        if (typeof saved.maxWords === 'number') setMaxWords(Math.max(2, Math.min(10, saved.maxWords)));
-      }
-    } catch {}
-  }, []);
-
-  // Persist toggles when they change
-  useEffect(() => {
-    const data = {
+  useStoredSettings(
+    'password_generator_toggles',
+    {
       useNumbers, useSymbols, useUpperCase, onlyLowerCase, urlSafe,
       separatorsInput, useMixedSeparators,
       minWords, maxWords, minNumber, maxNumber
-    };
-    try { localStorage.setItem('password_generator_toggles', JSON.stringify(data)); } catch {}
-  }, [useNumbers, useSymbols, useUpperCase, onlyLowerCase, urlSafe, separatorsInput, useMixedSeparators, minWords, maxWords, minNumber, maxNumber]);
+    },
+    (saved) => {
+      if (typeof saved.useNumbers === 'boolean') setUseNumbers(saved.useNumbers);
+      if (typeof saved.useSymbols === 'boolean') setUseSymbols(saved.useSymbols);
+      if (typeof saved.useUpperCase === 'boolean') setUseUpperCase(saved.useUpperCase);
+      if (typeof saved.onlyLowerCase === 'boolean') setOnlyLowerCase(saved.onlyLowerCase);
+      if (typeof saved.urlSafe === 'boolean') setUrlSafe(saved.urlSafe);
+      if (typeof saved.minNumber === 'number') setMinNumber(Math.max(0, saved.minNumber));
+      if (typeof saved.maxNumber === 'number') setMaxNumber(Math.max(0, saved.maxNumber));
+      if (typeof saved.separatorsInput === 'string') setSeparatorsInput(saved.separatorsInput);
+      if (typeof saved.useMixedSeparators === 'boolean') setUseMixedSeparators(saved.useMixedSeparators);
+      if (typeof saved.minWords === 'number') setMinWords(Math.max(2, Math.min(10, saved.minWords)));
+      if (typeof saved.maxWords === 'number') setMaxWords(Math.max(2, Math.min(10, saved.maxWords)));
+    },
+  );
 
   const generatePasswordWithConfig = () => {
     return generatePassword({
@@ -168,13 +161,10 @@ const PasswordTool = () => {
     generatePasswords();
   }, [useNumbers, useSymbols, useUpperCase, onlyLowerCase, separatorsInput, useMixedSeparators, minWords, maxWords, urlSafe, minNumber, maxNumber]);
 
-    const handleCopy = async (pwd, index) => {
-    try {
-      await navigator.clipboard.writeText(pwd);
+  const handleCopy = async (pwd, index) => {
+    if (await copyText(pwd)) {
       setCopied(index);
       setTimeout(() => setCopied(null), 2000);
-    } catch {
-      /* ignore copy errors */
     }
   };
 

@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import bcrypt from 'bcryptjs';
 import { encodeBase64, decodeBase64, encodeCrypt64, generateSalt, generatePassword } from './utils';
 import { passwordDictionary } from './passwordDictionary';
+import { useDebouncedEffect } from './hooks';
+import { copyText } from './browserActions';
 
 const textEncoder = new TextEncoder();
 
@@ -177,20 +179,11 @@ const PasswordHashTool = () => {
     }
   };
 
-  useEffect(() => {
-    if (password) {
-      const timer = setTimeout(() => {
-        computeHash();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [password, hashType, useCustomSalt, customSalt, iterations, bcryptRounds]);
+  useDebouncedEffect(() => {
+    if (password) computeHash();
+  }, 500, [password, hashType, useCustomSalt, customSalt, iterations, bcryptRounds]);
 
-  const handleCopy = async (text) => {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {}
-  };
+  const handleCopy = copyText;
 
   const regeneratePassword = () => {
     setPassword(generatePassword({ wordList: passwordDictionary }));
@@ -218,7 +211,7 @@ const PasswordHashTool = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter password to hash"
-                  className="flex-1 px-3 py-2 text-sm font-mono bg-transparent border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-jwtBlue"
+                  className="flex-1 px-3 py-2 text-sm font-mono bg-transparent border border-gray-300 dark:border-gray-600 rounded focus:outline-hidden focus:ring-2 focus:ring-jwtBlue"
                 />
                 <button
                   onClick={regeneratePassword}
@@ -238,7 +231,7 @@ const PasswordHashTool = () => {
               <select
                 value={hashType}
                 onChange={(e) => setHashType(e.target.value)}
-                className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-jwtBlue"
+                className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded focus:outline-hidden focus:ring-2 focus:ring-jwtBlue"
               >
                 {HASH_TYPES.map(type => (
                   <option key={type.value} value={type.value}>
@@ -316,7 +309,7 @@ const PasswordHashTool = () => {
                   value={customSalt}
                   onChange={(e) => setCustomSalt(e.target.value)}
                   placeholder="Leave empty for random salt"
-                  className="w-full px-3 py-2 text-sm font-mono bg-transparent border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-jwtBlue"
+                  className="w-full px-3 py-2 text-sm font-mono bg-transparent border border-gray-300 dark:border-gray-600 rounded focus:outline-hidden focus:ring-2 focus:ring-jwtBlue"
                 />
               )}
             </div>

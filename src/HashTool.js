@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import Base64QuerySync from './Base64QuerySync';
 import MD5 from 'crypto-js/md5';
@@ -8,6 +8,7 @@ import encHex from 'crypto-js/enc-hex';
 import bcrypt from 'bcryptjs';
 import { blake2bHex, blake2sHex } from 'blakejs';
 import { encodeBase32, encodeBase64, encodeBase85, decodeHex } from './utils';
+import { useDebouncedEffect } from './hooks';
 
 // Full algorithm list we compute concurrently
 const algorithms = ['MD5','SHA-256','SHA-512','BLAKE2b','BLAKE2s','bcrypt'];
@@ -19,7 +20,6 @@ const HashTool = () => {
   const [results, setResults] = useState({}); // { alg: { hex, base64, base32, base85 } }
   const [isComputing, setIsComputing] = useState(false);
   const [error, setError] = useState('');
-  const debounceRef = useRef(null);
 
   const encodeState = useMemo(() => (v) => v.length <= MAX_URL_INPUT ? v : '', []);
   const decodeState = useMemo(() => (str) => str !== undefined ? str : undefined, []);
@@ -70,11 +70,7 @@ const HashTool = () => {
   };
 
   // Debounce input changes
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => { computeAll(input); }, 300);
-    return () => debounceRef.current && clearTimeout(debounceRef.current);
-  }, [input]);
+  useDebouncedEffect(() => computeAll(input), 300, [input]);
 
   const clearAll = () => { setInput(''); setResults({}); setError(''); };
 

@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useStoredState } from './hooks';
+import { readHistoryItems } from './historyStorage';
 
 // Generic, reusable history component that stores items in localStorage.
 // - Deduplicates based on a provided dedupeKey(item) or JSON.stringify(item).
@@ -25,24 +27,12 @@ const HistoryList = ({
   onRestore = () => {},
   children, // optional render-prop for full control over rendering
 }) => {
-  const [items, setItems] = useState([]); // array of { value, ts }
+  const [items, setItems] = useStoredState(
+    storageKey,
+    () => readHistoryItems(storageKey),
+    { validate: Array.isArray },
+  ); // array of { value, ts }
   const lastKeyRef = useRef('');
-
-  // Load initial items
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) {
-        const arr = JSON.parse(raw);
-        if (Array.isArray(arr)) setItems(arr);
-      }
-    } catch {}
-  }, [storageKey]);
-
-  // Persist on change
-  useEffect(() => {
-    try { localStorage.setItem(storageKey, JSON.stringify(items)); } catch {}
-  }, [items, storageKey]);
 
   // Add new item when it changes
   useEffect(() => {

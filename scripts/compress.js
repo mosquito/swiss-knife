@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
-const archiver = require('archiver');
+const { ZipArchive } = require('archiver');
 
 const distDir = path.resolve(__dirname, '..', 'dist');
 const distOfflineDir = path.resolve(__dirname, '..', 'dist-offline');
@@ -17,7 +17,7 @@ async function createZip() {
   }
 
   const output = fs.createWriteStream(zipPath);
-  const archive = archiver('zip', { zlib: { level: 9 } });
+  const archive = new ZipArchive({ zlib: { level: 9 } });
 
   return new Promise((resolve, reject) => {
     archive.on('error', reject);
@@ -77,4 +77,7 @@ function processFile(filename) {
 console.log('Starting compression in', distDir);
 targets.forEach(processFile);
 
-createZip().catch(console.error);
+createZip().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

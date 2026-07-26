@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import Base64QuerySync from './Base64QuerySync';
 import YAML from 'yaml';
+import { useDebouncedEffect } from './hooks';
+import { copyText } from './browserActions';
+import CodeEditorPanel from './CodeEditorPanel';
 
 const MAX_INPUT_URL = 2000;
 const FORMATS = ['json', 'yaml', 'toml', 'xml', 'html'];
@@ -152,7 +154,6 @@ const DataFormatTool = () => {
   const [errorLeft, setErrorLeft] = useState('');
   const [errorRight, setErrorRight] = useState('');
   const [lastEdited, setLastEdited] = useState('left');
-  const debounceRef = useRef(null);
   const currentObjRef = useRef(initialObj);
 
   // Parse edited pane and update opposite pane
@@ -213,11 +214,7 @@ const DataFormatTool = () => {
     }
   };
 
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(performSync, 250);
-    return () => debounceRef.current && clearTimeout(debounceRef.current);
-  }, [leftText, rightText]);
+  useDebouncedEffect(performSync, 250, [leftText, rightText]);
 
   // When format selector changes, reserialize current object into that pane, and resync opposite if lastEdited is other side
   useEffect(() => {
@@ -251,8 +248,8 @@ const DataFormatTool = () => {
     }
   }, [rightFormat]);
 
-  const handleLeftChange = (e) => { setLastEdited('left'); setLeftText(e.target.value); };
-  const handleRightChange = (e) => { setLastEdited('right'); setRightText(e.target.value); };
+  const handleLeftChange = (value) => { setLastEdited('left'); setLeftText(value); };
+  const handleRightChange = (value) => { setLastEdited('right'); setRightText(value); };
 
   const handleSwap = () => {
     // Swap formats while keeping semantic object
@@ -326,7 +323,7 @@ const DataFormatTool = () => {
     setErrorLeft(''); setErrorRight('');
   };
 
-  const copyToClipboard = async (text) => { try { await navigator.clipboard.writeText(text); } catch { /* ignore */ } };
+  const copyToClipboard = copyText;
 
   // Compact URL encoding: l=leftFormat(0-4), r=rightFormat(0-4), t=text
   const FORMAT_MAP = { json: 0, yaml: 1, toml: 2, xml: 3, html: 4 };
@@ -376,12 +373,12 @@ const DataFormatTool = () => {
           <button onClick={handleClear} className="btn-secondary btn-sm">Clear</button>
         </div>
         <div className="grid md:grid-cols-2 gap-4">
-          {/* LEFT PANE */}
-          <div className="flex flex-col bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded h-[60vh] md:h-[70vh] min-h-0">
-            <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 gap-2">
+          <CodeEditorPanel
+            className="h-[60vh] md:h-[70vh]"
+            header={(
               <div className="flex items-center gap-2">
                 <span className="font-bold text-[11px]">Source</span>
-                <select value={leftFormat} onChange={e=>setLeftFormat(e.target.value)} className="text-[11px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 focus:outline-none">
+                <select value={leftFormat} onChange={e=>setLeftFormat(e.target.value)} className="text-[11px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 focus:outline-hidden">
                   <option value="json">JSON</option>
                   <option value="yaml">YAML</option>
                   <option value="toml">TOML</option>
@@ -389,24 +386,19 @@ const DataFormatTool = () => {
                   <option value="html">HTML</option>
                 </select>
               </div>
-              <button onClick={()=>copyToClipboard(leftText)} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>
-            </div>
-            <TextareaWithLineNumbers
-              value={leftText}
-              onChange={handleLeftChange}
-              spellCheck="false"
-              className="flex-1 font-mono text-[11px] bg-transparent min-h-0"
-              gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-3 min-w-[2.5rem]"
-              textareaClassName="bg-transparent p-3 border-none w-full h-full"
-            />
-            {errorLeft && <div className="px-3 py-1 text-[10px] text-red-600 border-t border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 font-mono">{errorLeft}</div>}
-          </div>
-          {/* RIGHT PANE */}
-          <div className="flex flex-col bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded h-[60vh] md:h-[70vh] min-h-0">
-            <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 gap-2">
+            )}
+            actions={<button onClick={()=>copyToClipboard(leftText)} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>}
+            value={leftText}
+            onChange={handleLeftChange}
+            error={errorLeft}
+            language={leftFormat}
+          />
+          <CodeEditorPanel
+            className="h-[60vh] md:h-[70vh]"
+            header={(
               <div className="flex items-center gap-2">
                 <span className="font-bold text-[11px]">Target</span>
-                <select value={rightFormat} onChange={e=>setRightFormat(e.target.value)} className="text-[11px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 focus:outline-none">
+                <select value={rightFormat} onChange={e=>setRightFormat(e.target.value)} className="text-[11px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 focus:outline-hidden">
                   <option value="json">JSON</option>
                   <option value="yaml">YAML</option>
                   <option value="toml">TOML</option>
@@ -414,18 +406,13 @@ const DataFormatTool = () => {
                   <option value="html">HTML</option>
                 </select>
               </div>
-              <button onClick={()=>copyToClipboard(rightText)} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>
-            </div>
-            <TextareaWithLineNumbers
-              value={rightText}
-              onChange={handleRightChange}
-              spellCheck="false"
-              className="flex-1 font-mono text-[11px] bg-transparent min-h-0"
-              gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-3 min-w-[2.5rem]"
-              textareaClassName="bg-transparent p-3 border-none w-full h-full"
-            />
-            {errorRight && <div className="px-3 py-1 text-[10px] text-red-600 border-t border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 font-mono">{errorRight}</div>}
-          </div>
+            )}
+            actions={<button onClick={()=>copyToClipboard(rightText)} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>}
+            value={rightText}
+            onChange={handleRightChange}
+            error={errorRight}
+            language={rightFormat}
+          />
         </div>
         <div className="text-[10px] text-gray-500 dark:text-gray-400 font-mono space-y-1">
           <div>Limitations: TOML advanced features (datetime, inline tables, multiline & literal strings, comments preservation) are not supported.</div>

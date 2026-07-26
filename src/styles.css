@@ -1,9 +1,30 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-jwtRed: #FB015B;
+  --color-jwtPurple: #D63AFF;
+  --color-jwtBlue: #00B9F1;
+  --default-ring-width: 3px;
+}
 
 :root {
   --sidebar-width: 256px;
+}
+
+.code-editor .cm-theme,
+.code-editor .cm-editor {
+  height: 100%;
+}
+
+.code-editor .cm-editor {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+}
+
+.code-editor .cm-scroller {
+  overflow: auto;
 }
 
 @layer utilities {
@@ -132,5 +153,5 @@
 }
 
 textarea {
-    @apply font-mono text-sm p-4 focus:outline-none resize-none;
+    @apply font-mono text-sm p-4 focus:outline-hidden resize-none;
 }

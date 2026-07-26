@@ -1,6 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import bwipjs from 'bwip-js';
+import React, { useState, useEffect } from 'react';
 import HistoryList from './HistoryList';
+import { copyText } from './browserActions';
+import { readLatestHistoryValue } from './historyStorage';
+import { useBwipOutput } from './useBwipOutput';
+import ImageOutputControls from './ImageOutputControls';
 
 const HISTORY_KEY = 'wifi_qr_history_v1';
 
@@ -10,48 +13,19 @@ const WifiQRTool = () => {
   const [security, setSecurity] = useState('WPA');
   const [hidden, setHidden] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [imgUrl, setImgUrl] = useState('');
-  const [error, setError] = useState('');
   const [inverted, setInverted] = useState(false);
-  const [outputFormat, setOutputFormat] = useState('svg');
-  const [pngScale, setPngScale] = useState(1);
   const [printPassword, setPrintPassword] = useState(false);
-  const canvasRef = useRef(null);
-  const svgRef = useRef(null);
-  const debounceRef = useRef(null);
-
-  // Load outputFormat preference from localStorage
-  useEffect(() => {
-    try {
-      const savedFormat = localStorage.getItem('wifi_qr_output_format');
-      if (savedFormat === 'png' || savedFormat === 'svg') {
-        setOutputFormat(savedFormat);
-      }
-      const savedScale = localStorage.getItem('wifi_qr_png_scale');
-      if (savedScale) {
-        const scale = Number(savedScale);
-        if (scale >= 1 && scale <= 5) {
-          setPngScale(scale);
-        }
-      }
-    } catch {}
-  }, []);
 
   // Load from history or use defaults
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(HISTORY_KEY);
-      if (raw) {
-        const items = JSON.parse(raw);
-        if (Array.isArray(items) && items.length > 0) {
-          setSsid(items[0].value.ssid || '');
-          setPassword(items[0].value.password || '');
-          setSecurity(items[0].value.security || 'WPA');
-          setHidden(items[0].value.hidden || false);
-          return;
-        }
-      }
-    } catch {}
+    const latest = readLatestHistoryValue(HISTORY_KEY);
+    if (latest) {
+      setSsid(latest.ssid || '');
+      setPassword(latest.password || '');
+      setSecurity(latest.security || 'WPA');
+      setHidden(latest.hidden || false);
+      return;
+    }
     // Example default
     setSsid('MyWiFiNetwork');
     setPassword('SuperSecret123!');
@@ -77,137 +51,38 @@ const WifiQRTool = () => {
     return `WIFI:${parts.join(';')};;`;
   };
 
-  const renderQRCode = () => {
-    if (!ssid.trim()) {
-      setError('SSID is required');
-      setImgUrl('');
-      return;
-    }
-
-    const wifiString = generateWifiString();
-
-    try {
-      if (outputFormat === 'svg') {
-        const svg = bwipjs.toSVG({
-          bcid: 'qrcode',
-          text: wifiString,
-          scale: 3,
-          height: 10,
-          width: 10,
-          includetext: false,
-        });
-        // Use data URL instead of blob URL for CSP compatibility (offline mode)
-        const url = 'data:image/svg+xml,' + encodeURIComponent(svg);
-        setImgUrl(url);
-        if (svgRef.current) svgRef.current = svg;
-      } else {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        
-        const ctx = canvas.getContext('2d');
-        ctx.save();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.restore();
-
-        bwipjs.toCanvas(canvas, {
-          bcid: 'qrcode',
-          text: wifiString,
-          scale: 3,
-          height: 10,
-          width: 10,
-          includetext: false,
-        });
-
-        // If scale > 1, create a scaled version with sharp edges
-        if (pngScale > 1) {
-          const scaledCanvas = document.createElement('canvas');
-          scaledCanvas.width = canvas.width * pngScale;
-          scaledCanvas.height = canvas.height * pngScale;
-          const scaledCtx = scaledCanvas.getContext('2d');
-          
-          // Disable image smoothing for sharp pixel scaling
-          scaledCtx.imageSmoothingEnabled = false;
-          scaledCtx.webkitImageSmoothingEnabled = false;
-          scaledCtx.mozImageSmoothingEnabled = false;
-          scaledCtx.msImageSmoothingEnabled = false;
-          
-          scaledCtx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
-          const url = scaledCanvas.toDataURL('image/png');
-          setImgUrl(url);
-        } else {
-          const url = canvas.toDataURL('image/png');
-          setImgUrl(url);
-        }
-      }
-      setError('');
-    } catch (e) {
-      setError(e.message || 'Failed to render QR code');
-      setImgUrl('');
-    }
-  };
-
-  // Save outputFormat preference to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('wifi_qr_output_format', outputFormat);
-    } catch {}
-  }, [outputFormat]);
-
-  // Save pngScale preference to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('wifi_qr_png_scale', String(pngScale));
-    } catch {}
-  }, [pngScale]);
-
-  // Debounce rendering
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => { renderQRCode(); }, 250);
-    return () => debounceRef.current && clearTimeout(debounceRef.current);
-  }, [ssid, password, security, hidden, outputFormat, pngScale]);
-
-  const handleDownload = () => {
-    if (!imgUrl) return;
-    const a = document.createElement('a');
-    a.href = imgUrl;
-    const ext = outputFormat === 'svg' ? 'svg' : 'png';
-    a.download = `wifi-${ssid}.${ext}`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  };
-
-  const handleCopyImage = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !navigator.clipboard || typeof ClipboardItem === 'undefined') return;
-    try {
-      await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
-        .then(async (blob) => {
-          if (blob) {
-            await navigator.clipboard.write([new window.ClipboardItem({ 'image/png': blob })]);
-          }
-        });
-    } catch (e) {
-      // ignore
-    }
-  };
-
-  const handleShare = async () => {
-    const shareUrl = window.location.href;
-    if (navigator.share) {
-      try { await navigator.share({ title: 'WiFi QR Code', url: shareUrl }); return; } catch {}
-    }
-    try { await navigator.clipboard.writeText(shareUrl); } catch {}
-  };
+  const {
+    canvasRef,
+    copyImage: handleCopyImage,
+    download: handleDownload,
+    error,
+    imgUrl,
+    outputFormat,
+    pngScale,
+    setOutputFormat,
+    setPngScale,
+    share: handleShare,
+  } = useBwipOutput({
+    storagePrefix: 'wifi_qr',
+    createOptions: () => {
+      if (!ssid.trim()) throw new Error('SSID is required');
+      return {
+        bcid: 'qrcode',
+        text: generateWifiString(),
+        scale: 3,
+        height: 10,
+        width: 10,
+        includetext: false,
+      };
+    },
+    dependencies: [ssid, password, security, hidden],
+    fileBaseName: () => `wifi-${ssid}`,
+    shareTitle: 'WiFi QR Code',
+    renderErrorMessage: 'Failed to render QR code',
+  });
 
   const handleCopyWifiString = async () => {
-    const wifiString = generateWifiString();
-    try {
-      await navigator.clipboard.writeText(wifiString);
-    } catch {}
+    await copyText(generateWifiString());
   };
 
   const handlePrint = () => {
@@ -320,7 +195,7 @@ const WifiQRTool = () => {
                 value={ssid}
                 onChange={(e) => setSsid(e.target.value)}
                 placeholder="MyWiFiNetwork"
-                className="mt-1 w-full text-sm px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-jwtBlue"
+                className="mt-1 w-full text-sm px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-hidden focus:ring-2 focus:ring-jwtBlue"
                 spellCheck="false"
               />
             </div>
@@ -335,7 +210,7 @@ const WifiQRTool = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Leave empty for open networks"
-                  className="w-full text-sm px-3 py-2 pr-10 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-jwtBlue"
+                  className="w-full text-sm px-3 py-2 pr-10 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-hidden focus:ring-2 focus:ring-jwtBlue"
                   spellCheck="false"
                 />
                 <button
@@ -355,7 +230,7 @@ const WifiQRTool = () => {
               <select
                 value={security}
                 onChange={(e) => setSecurity(e.target.value)}
-                className="mt-1 w-full text-sm px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-jwtBlue"
+                className="mt-1 w-full text-sm px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-hidden focus:ring-2 focus:ring-jwtBlue"
               >
                 <option value="WPA">WPA/WPA2/WPA3</option>
                 <option value="WEP">WEP (Legacy)</option>
@@ -387,57 +262,12 @@ const WifiQRTool = () => {
               </label>
             </div>
 
-            <div>
-              <label className="text-xs font-bold text-gray-600 dark:text-gray-400">
-                Output Format
-              </label>
-              <div className="mt-1 flex gap-2">
-                <button
-                  onClick={() => setOutputFormat('png')}
-                  className={`flex-1 px-3 py-2 text-sm rounded border transition ${
-                    outputFormat === 'png'
-                      ? 'bg-jwtBlue text-white border-jwtBlue'
-                      : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  PNG
-                </button>
-                <button
-                  onClick={() => setOutputFormat('svg')}
-                  className={`flex-1 px-3 py-2 text-sm rounded border transition ${
-                    outputFormat === 'svg'
-                      ? 'bg-jwtBlue text-white border-jwtBlue'
-                      : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  SVG
-                </button>
-              </div>
-            </div>
-
-            {outputFormat === 'png' && (
-              <div>
-                <label className="text-xs font-bold text-gray-600 dark:text-gray-400">
-                  PNG Scale: {pngScale}x
-                </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  step="1"
-                  value={pngScale}
-                  onChange={(e) => setPngScale(Number(e.target.value))}
-                  className="mt-1 w-full"
-                />
-                <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 mt-1">
-                  <span>1x</span>
-                  <span>2x</span>
-                  <span>3x</span>
-                  <span>4x</span>
-                  <span>5x</span>
-                </div>
-              </div>
-            )}
+            <ImageOutputControls
+              outputFormat={outputFormat}
+              pngScale={pngScale}
+              setOutputFormat={setOutputFormat}
+              setPngScale={setPngScale}
+            />
 
             <div className="pt-2 border-t border-gray-300 dark:border-gray-700">
               <div className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">

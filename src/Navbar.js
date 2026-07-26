@@ -1,70 +1,25 @@
 import React, { useState, useEffect } from 'react';
-
-const toolCategories = [
-  {
-    name: 'Security',
-    tools: [
-      { id: 'jwt', label: 'JWT Tool', icon: 'icon-lock' },
-      { id: 'hash', label: 'Hashes', icon: 'icon-bitcoin' },
-      { id: 'crypto', label: 'Crypto Utils', icon: 'icon-shield' },
-      { id: 'passwordhash', label: 'PW Hash', icon: 'icon-closed-eye' },
-    ]
-  },
-  {
-    name: 'Encoding',
-    tools: [
-      { id: 'encode', label: 'Encode / Decode', icon: 'icon-cycled-arrows' },
-      { id: 'barcode', label: 'Barcodes', icon: 'icon-barcode' },
-      { id: 'format', label: 'Data Format', icon: 'icon-nodes' },
-    ]
-  },
-  {
-    name: 'Network',
-    tools: [
-      { id: 'ipcalc', label: 'IP Calc', icon: 'icon-socket-cord' },
-      { id: 'wifiqr', label: 'WiFi QR', icon: 'icon-wireless' },
-    ]
-  },
-  {
-    name: 'Utilities',
-    tools: [
-      { id: 'password', label: 'Password', icon: 'icon-abc' },
-      { id: 'uuid', label: 'UUID', icon: 'icon-tag-id' },
-      { id: 'datetime', label: 'Date / Time', icon: 'icon-clock' },
-      { id: 'units', label: 'Units', icon: 'icon-bidirectional-arrows' },
-    ]
-  }
-];
-
-const allTools = toolCategories.flatMap(cat => cat.tools);
+import { allTools, toolCategories } from './toolsRegistry';
+import { useStoredState } from './hooks';
 
 const Navbar = ({ activeTool, onSelect }) => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    const saved = localStorage.getItem('sidebarCollapsed');
-    return saved ? JSON.parse(saved) : false;
-  });
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useStoredState('sidebarCollapsed', false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
-    if (saved !== null) {
-      return JSON.parse(saved);
-    }
-    // Default to system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
+  const [isDarkMode, setIsDarkMode] = useStoredState(
+    'darkMode',
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches,
+  );
 
   const activeToolData = allTools.find(t => t.id === activeTool);
   const activeToolLabel = activeToolData?.label || 'Swiss Knife';
 
   useEffect(() => {
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(isSidebarCollapsed));
     // Update CSS variable for sidebar width
     document.documentElement.style.setProperty('--sidebar-width', isSidebarCollapsed ? '64px' : '256px');
   }, [isSidebarCollapsed]);
 
   useEffect(() => {
-    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
     // Apply or remove dark class on document element
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -111,7 +66,7 @@ const Navbar = ({ activeTool, onSelect }) => {
       {/* Mobile Drawer Overlay */}
       {isMobileOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 mt-14"
+          className="lg:hidden fixed inset-0 bg-black/50 z-40 mt-14"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
@@ -131,7 +86,7 @@ const Navbar = ({ activeTool, onSelect }) => {
               placeholder="Search tools..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-hidden focus:ring-2 focus:ring-gray-500"
             />
           </div>
 
@@ -226,7 +181,7 @@ const Navbar = ({ activeTool, onSelect }) => {
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full px-3 py-2 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-hidden focus:ring-2 focus:ring-gray-500"
               />
             </div>
           )}

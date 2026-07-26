@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const archiver = require('archiver');
+const { ZipArchive } = require('archiver');
 
 const distOfflineDir = path.resolve(__dirname, '..', 'dist-offline');
 const distDir = path.resolve(__dirname, '..', 'dist');
@@ -14,7 +14,7 @@ async function createZip() {
   }
 
   const output = fs.createWriteStream(zipPath);
-  const archive = archiver('zip', { zlib: { level: 9 } });
+  const archive = new ZipArchive({ zlib: { level: 9 } });
 
   archive.on('error', (err) => {
     throw err;
@@ -32,4 +32,7 @@ async function createZip() {
   await archive.finalize();
 }
 
-createZip().catch(console.error);
+createZip().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

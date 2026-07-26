@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Base64QuerySync from './Base64QuerySync';
+import { copyText } from './browserActions';
 
 const UNIT_CATEGORIES = {
   storage: {
@@ -368,11 +369,7 @@ const UnitsConverterTool = () => {
     return formatNumber(value);
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text).then(() => {
-      // Could add a toast notification here
-    });
-  };
+  const copyToClipboard = copyText;
 
   // Compact URL encoding
   const CATEGORY_MAP = { storage: 0, temperature: 1, length: 2, weight: 3, number: 4, time: 5 };

@@ -17,6 +17,8 @@ import {
   NAMESPACE_OID,
   NAMESPACE_X500
 } from './uuidGenerators';
+import { useStoredSettings } from './hooks';
+import { copyText as copyToClipboard } from './browserActions';
 
 // Namespace type mapping for compact URL encoding
 const NS_MAP = { DNS: 0, URL: 1, OID: 2, X500: 3, CUSTOM: 4 };
@@ -54,10 +56,6 @@ const uuidToBase32 = (uuid) => {
 const uuidToBase85 = (uuid) => {
   const bytes = uuidToBytes(uuid);
   return bytes ? encodeBase85(bytes) : '';
-};
-
-const copyToClipboard = (text) => {
-  navigator.clipboard.writeText(text);
 };
 
 const UuidRow = ({ version, uuid, name, namespaceName, customNamespace, onNameChange, onNamespaceChange, onCustomNamespaceChange, description, useLegacy, onLegacyChange, isCustomNamespaceValid, onRegenerate }) => {
@@ -313,7 +311,6 @@ const UuidTool = () => {
   const [uuid7UseLegacy, setUuid7UseLegacy] = useState(false);
   const [uuid3CustomNamespaceValid, setUuid3CustomNamespaceValid] = useState(true);
   const [uuid5CustomNamespaceValid, setUuid5CustomNamespaceValid] = useState(true);
-  const [urlDecoded, setUrlDecoded] = useState(false);
 
   // URL sync for UUID tool state
   // s: shortUUID (converter), 3: uuid3 state, 5: uuid5 state
@@ -437,49 +434,37 @@ const UuidTool = () => {
     return info;
   };
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('uuid_tool_settings');
-      if (saved) {
-        const settings = JSON.parse(saved);
-        if (settings.uuid3Name) setUuid3Name(settings.uuid3Name);
-        if (settings.uuid3NamespaceType) setUuid3NamespaceType(settings.uuid3NamespaceType);
-        if (settings.uuid3CustomNamespace) setUuid3CustomNamespace(settings.uuid3CustomNamespace);
-        if (settings.uuid3UseLegacy !== undefined) setUuid3UseLegacy(settings.uuid3UseLegacy);
-        if (settings.uuid4UseLegacy !== undefined) setUuid4UseLegacy(settings.uuid4UseLegacy);
-        if (settings.uuid5Name) setUuid5Name(settings.uuid5Name);
-        if (settings.uuid5NamespaceType) setUuid5NamespaceType(settings.uuid5NamespaceType);
-        if (settings.uuid5CustomNamespace) setUuid5CustomNamespace(settings.uuid5CustomNamespace);
-        if (settings.uuid5UseLegacy !== undefined) setUuid5UseLegacy(settings.uuid5UseLegacy);
-        if (settings.uuid6UseLegacy !== undefined) setUuid6UseLegacy(settings.uuid6UseLegacy);
-        if (settings.uuid1UseLegacy !== undefined) setUuid1UseLegacy(settings.uuid1UseLegacy);
-        if (settings.uuid7UseLegacy !== undefined) setUuid7UseLegacy(settings.uuid7UseLegacy);
-      }
-    } catch {}
-  }, []);
-
-  // Save to localStorage whenever settings change
-  useEffect(() => {
-    try {
-      const settings = {
-        uuid3Name,
-        uuid3NamespaceType,
-        uuid3CustomNamespace,
-        uuid3UseLegacy,
-        uuid4UseLegacy,
-        uuid5Name,
-        uuid5NamespaceType,
-        uuid5CustomNamespace,
-        uuid5UseLegacy,
-        uuid6UseLegacy,
-        uuid1UseLegacy,
-        uuid7UseLegacy
-      };
-      localStorage.setItem('uuid_tool_settings', JSON.stringify(settings));
-    } catch {}
-  }, [uuid3Name, uuid3NamespaceType, uuid3CustomNamespace, uuid3UseLegacy, uuid4UseLegacy, 
-      uuid5Name, uuid5NamespaceType, uuid5CustomNamespace, uuid5UseLegacy, uuid6UseLegacy, uuid1UseLegacy, uuid7UseLegacy]);
+  useStoredSettings(
+    'uuid_tool_settings',
+    {
+      uuid3Name,
+      uuid3NamespaceType,
+      uuid3CustomNamespace,
+      uuid3UseLegacy,
+      uuid4UseLegacy,
+      uuid5Name,
+      uuid5NamespaceType,
+      uuid5CustomNamespace,
+      uuid5UseLegacy,
+      uuid6UseLegacy,
+      uuid1UseLegacy,
+      uuid7UseLegacy,
+    },
+    (settings) => {
+      if (settings.uuid3Name) setUuid3Name(settings.uuid3Name);
+      if (settings.uuid3NamespaceType) setUuid3NamespaceType(settings.uuid3NamespaceType);
+      if (settings.uuid3CustomNamespace) setUuid3CustomNamespace(settings.uuid3CustomNamespace);
+      if (settings.uuid3UseLegacy !== undefined) setUuid3UseLegacy(settings.uuid3UseLegacy);
+      if (settings.uuid4UseLegacy !== undefined) setUuid4UseLegacy(settings.uuid4UseLegacy);
+      if (settings.uuid5Name) setUuid5Name(settings.uuid5Name);
+      if (settings.uuid5NamespaceType) setUuid5NamespaceType(settings.uuid5NamespaceType);
+      if (settings.uuid5CustomNamespace) setUuid5CustomNamespace(settings.uuid5CustomNamespace);
+      if (settings.uuid5UseLegacy !== undefined) setUuid5UseLegacy(settings.uuid5UseLegacy);
+      if (settings.uuid6UseLegacy !== undefined) setUuid6UseLegacy(settings.uuid6UseLegacy);
+      if (settings.uuid1UseLegacy !== undefined) setUuid1UseLegacy(settings.uuid1UseLegacy);
+      if (settings.uuid7UseLegacy !== undefined) setUuid7UseLegacy(settings.uuid7UseLegacy);
+    },
+  );
 
   const namespaceMap = {
     'DNS': NAMESPACE_DNS,
@@ -542,7 +527,6 @@ const UuidTool = () => {
         encode={encodeState}
         decode={decodeState}
         onDecoded={(val) => {
-          setUrlDecoded(true);
           // Restore converter from shortUUID
           if (val.s) {
             handleConverterShortChange(val.s);

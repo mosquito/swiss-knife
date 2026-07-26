@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import TextareaWithLineNumbers from './TextareaWithLineNumbers';
+import React, { useState, useMemo } from 'react';
 import Base64QuerySync from './Base64QuerySync';
 import { encodeBase32, decodeBase32, encodeBase64, decodeBase64, encodeBase85, decodeBase85, encodeHex, decodeHex } from './utils';
+import { useDebouncedEffect } from './hooks';
+import { copyText, downloadBlob } from './browserActions';
+import CodeEditorPanel from './CodeEditorPanel';
 
 // Encode / Decode utility supporting: Base64, Base32, Hex, URL
 // All operations performed locally in the browser.
@@ -51,7 +53,6 @@ const EncodeDecodeTool = () => {
   const [outputMode, setOutputMode] = useState('text'); // 'text' | 'hex'
   const [isBinary, setIsBinary] = useState(false);
   const [error, setError] = useState('');
-  const debounceRef = useRef(null);
 
   // Compact URL encoding
   const encodeParams = useMemo(() => (val) => JSON.stringify({
@@ -184,24 +185,17 @@ const EncodeDecodeTool = () => {
     setError(errorMsg);
   };
 
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(compute, 200);
-    return () => debounceRef.current && clearTimeout(debounceRef.current);
-  }, [input, mode, format]);
+  useDebouncedEffect(compute, 200, [input, mode, format]);
 
-  const handleCopy = async (text) => { try { await navigator.clipboard.writeText(text); } catch {/* ignore */} };
+  const handleCopy = copyText;
   const handleClear = () => { setInput(''); setOutput(''); setError(''); setOutputBytes(null); setIsBinary(false); setOutputMode('text'); };
 
   const handleDownload = () => {
     if (!outputBytes) return;
-    const blob = new Blob([outputBytes], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'decoded-data.bin';
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(
+      new Blob([outputBytes], { type: 'application/octet-stream' }),
+      'decoded-data.bin',
+    );
   };
 
   const toggleOutputMode = () => {
@@ -259,25 +253,18 @@ const EncodeDecodeTool = () => {
           <button onClick={()=>handleCopy(output)} className="btn-primary btn-sm">Copy Output</button>
         </div>
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="flex flex-col bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded h-[55vh] md:h-[60vh] min-h-0">
-            <div className="px-3 py-2 text-[11px] font-bold border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 flex items-center justify-between">
-              <span>Input ({mode === 'encode' ? 'raw text' : 'encoded text'})</span>
-              <button onClick={()=>handleCopy(input)} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>
-            </div>
-            <TextareaWithLineNumbers
-              value={input}
-              onChange={e=>setInput(e.target.value)}
-              spellCheck="false"
-              placeholder={mode==='encode'? 'Type text to encode' : 'Paste encoded text to decode'}
-              className="flex-1 font-mono text-[11px] bg-transparent min-h-0"
-              gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-3 min-w-[2.5rem]"
-              textareaClassName="bg-transparent p-3 border-none w-full h-full"
-            />
-          </div>
-          <div className="flex flex-col bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded h-[55vh] md:h-[60vh] min-h-0">
-            <div className="px-3 py-2 text-[11px] font-bold border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 flex items-center justify-between">
-              <span>Output ({mode === 'encode' ? 'encoded text' : 'decoded text'}){isBinary && ' (binary detected)'}</span>
-              {mode === 'decode' && isBinary && (
+          <CodeEditorPanel
+            className="h-[55vh] md:h-[60vh]"
+            header={<span className="text-[11px] font-bold">Input ({mode === 'encode' ? 'raw text' : 'encoded text'})</span>}
+            actions={<button onClick={()=>handleCopy(input)} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Copy</button>}
+            value={input}
+            onChange={setInput}
+            placeholder={mode==='encode'? 'Type text to encode' : 'Paste encoded text to decode'}
+          />
+          <CodeEditorPanel
+            className="h-[55vh] md:h-[60vh]"
+            header={<span className="text-[11px] font-bold">Output ({mode === 'encode' ? 'encoded text' : 'decoded text'}){isBinary && ' (binary detected)'}</span>}
+            actions={mode === 'decode' && isBinary ? (
                 <div className="flex gap-1">
                   <button onClick={toggleOutputMode} className="text-[10px] px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">
                     {outputMode === 'text' ? 'Hex' : 'Text'}
@@ -286,18 +273,11 @@ const EncodeDecodeTool = () => {
                     Download
                   </button>
                 </div>
-              )}
-            </div>
-            <TextareaWithLineNumbers
-              value={output}
-              readOnly
-              spellCheck="false"
-              className="flex-1 font-mono text-[11px] bg-transparent min-h-0"
-              gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-3 min-w-[2.5rem]"
-              textareaClassName="bg-transparent p-3 border-none w-full h-full"
-            />
-            {error && <div className="px-3 py-1 text-[10px] text-red-600 border-t border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 font-mono">{error}</div>}
-          </div>
+              ) : null}
+            value={output}
+            readOnly
+            error={error}
+          />
         </div>
         <div className="text-[10px] text-gray-500 dark:text-gray-400 font-mono">Unicode via UTF-8. Base32: RFC4648 alphabet (base-x library). Base85: Ascii85 variant (ascii85 library). URL uses encodeURIComponent/decodeURIComponent.</div>
       </div>

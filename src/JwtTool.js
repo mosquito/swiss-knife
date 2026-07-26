@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import TextareaWithLineNumbers from './TextareaWithLineNumbers';
+import CodeEditor from './CodeEditor';
 import { decodeJWT, signJWT, verifyJWT, generateKeysAsync, isPrivateKey, extractPublicFromPrivateAsync } from './utils';
 import HistoryList from './HistoryList';
+import { copyText } from './browserActions';
+import { readLatestHistoryValue } from './historyStorage';
 
 // Helper to convert Unix timestamp to datetime-local format
 const unixToDatetimeLocal = (unix) => {
@@ -65,19 +68,31 @@ const JwtTool = () => {
 
   const handleCopyPublic = async () => {
     if(!derivedPublicKey) return;
-    try { await navigator.clipboard.writeText(derivedPublicKey); setIsCopied(true); setTimeout(()=>setIsCopied(false),2000); } catch { /* ignore copy errors */ }
+    if (await copyText(derivedPublicKey)) {
+      setIsCopied(true);
+      setTimeout(()=>setIsCopied(false),2000);
+    }
   };
 
   const handleCopyToken = async () => {
-    try { await navigator.clipboard.writeText(token); setCopiedToken(true); setTimeout(()=>setCopiedToken(false),2000); } catch { /* ignore copy errors */ }
+    if (await copyText(token)) {
+      setCopiedToken(true);
+      setTimeout(()=>setCopiedToken(false),2000);
+    }
   };
 
   const handleCopyHeader = async () => {
-    try { await navigator.clipboard.writeText(JSON.stringify(header, null, 2)); setCopiedHeader(true); setTimeout(()=>setCopiedHeader(false),2000); } catch { /* ignore copy errors */ }
+    if (await copyText(JSON.stringify(header, null, 2))) {
+      setCopiedHeader(true);
+      setTimeout(()=>setCopiedHeader(false),2000);
+    }
   };
 
   const handleCopyPayload = async () => {
-    try { await navigator.clipboard.writeText(JSON.stringify(payload, null, 2)); setCopiedPayload(true); setTimeout(()=>setCopiedPayload(false),2000); } catch { /* ignore copy errors */ }
+    if (await copyText(JSON.stringify(payload, null, 2))) {
+      setCopiedPayload(true);
+      setTimeout(()=>setCopiedPayload(false),2000);
+    }
   };
 
   useEffect(() => {
@@ -86,27 +101,12 @@ const JwtTool = () => {
       const key = await applyNewKeys(alg);
       
       // Try to load last payload from history
-      let initialPayload = DEFAULT_PAYLOAD;
-      try {
-        const historyRaw = localStorage.getItem('jwt-payload-history');
-        if (historyRaw) {
-          const historyArray = JSON.parse(historyRaw);
-          if (Array.isArray(historyArray) && historyArray.length > 0) {
-            // Use the most recent payload (first item)
-            initialPayload = historyArray[0].value;
-            setPayload(initialPayload);
-            setPayloadText(JSON.stringify(initialPayload, null, 2));
-          } else {
-            // History is empty, add default payload
-            setPayloadForHistory(DEFAULT_PAYLOAD);
-          }
-        } else {
-          // No history exists, add default payload
-          setPayloadForHistory(DEFAULT_PAYLOAD);
-        }
-      } catch {
-        // On error, use default and save it
+      const initialPayload = readLatestHistoryValue('jwt-payload-history') || DEFAULT_PAYLOAD;
+      if (initialPayload === DEFAULT_PAYLOAD) {
         setPayloadForHistory(DEFAULT_PAYLOAD);
+      } else {
+        setPayload(initialPayload);
+        setPayloadText(JSON.stringify(initialPayload, null, 2));
       }
       
       const initialToken = signJWT(DEFAULT_HEADER, initialPayload, key);
@@ -369,7 +369,15 @@ const JwtTool = () => {
                 {!isEditable && <span className="text-[10px] text-gray-400 font-bold uppercase">Read Only</span>}
               </div>
             </div>
-            <TextareaWithLineNumbers readOnly={!isEditable} className={`w-full h-24 flex bg-white dark:bg-gray-800 border-l-4 border-jwtRed rounded shadow-sm text-jwtRed font-mono text-sm overflow-hidden ${!isEditable ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`} gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-2 min-w-[2.5rem]" textareaClassName="bg-transparent p-2 border-none w-full h-full outline-none" value={headerText} onChange={(e)=>handleJsonTextChange('header', e.target.value)} onBlur={()=>handleJsonBlur('header')} spellCheck="false" />
+            <CodeEditor
+              readOnly={!isEditable}
+              className={`w-full h-24 border-l-4 border-jwtRed rounded-sm shadow-xs ${!isEditable ? 'opacity-50 cursor-not-allowed' : ''}`}
+              language="json"
+              value={headerText}
+              onChange={(value)=>handleJsonTextChange('header', value)}
+              onBlur={()=>handleJsonBlur('header')}
+              ariaLabel="JWT header JSON"
+            />
             {decodeResult.headerError && (
               <div className="mt-1 text-xs text-red-600 dark:text-red-400 font-bold">
                 ⚠ {decodeResult.headerError}
@@ -389,7 +397,15 @@ const JwtTool = () => {
                 {!isEditable && <span className="text-[10px] text-gray-400 font-bold uppercase">Read Only</span>}
               </div>
             </div>
-            <TextareaWithLineNumbers readOnly={!isEditable} className={`w-full h-48 flex bg-white dark:bg-gray-800 border-l-4 border-jwtPurple rounded shadow-sm text-jwtPurple font-mono text-sm overflow-hidden ${!isEditable ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`} gutterClassName="bg-gray-50 dark:bg-gray-900/50 text-gray-400 border-r border-gray-200 dark:border-gray-700 p-2 min-w-[2.5rem]" textareaClassName="bg-transparent p-2 border-none w-full h-full outline-none" value={payloadText} onChange={(e)=>handleJsonTextChange('payload', e.target.value)} onBlur={()=>handleJsonBlur('payload')} spellCheck="false" />
+            <CodeEditor
+              readOnly={!isEditable}
+              className={`w-full h-48 border-l-4 border-jwtPurple rounded-sm shadow-xs ${!isEditable ? 'opacity-50 cursor-not-allowed' : ''}`}
+              language="json"
+              value={payloadText}
+              onChange={(value)=>handleJsonTextChange('payload', value)}
+              onBlur={()=>handleJsonBlur('payload')}
+              ariaLabel="JWT payload JSON"
+            />
             {decodeResult.payloadError && (
               <div className="mt-1 text-xs text-red-600 dark:text-red-400 font-bold">
                 ⚠ {decodeResult.payloadError}

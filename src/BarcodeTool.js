@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import Base64QuerySync from './Base64QuerySync';
-import bwipjs from 'bwip-js';
 import HistoryList from './HistoryList';
+import { useBwipOutput } from './useBwipOutput';
+import ImageOutputControls from './ImageOutputControls';
 
 // Supported symbologies (value, label, height, width, category, validate, examples)
 // height: relative height for the barcode
@@ -91,76 +92,14 @@ const SYMS = [
 const HISTORY_KEY = 'barcode_history_v1';
 
 const BarcodeTool = () => {
-  const [text, setText] = useState('');
-  const [type, setType] = useState('ean13');
+  const [text, setText] = useState(() => SYMS[0]?.examples?.[0]?.value || '');
+  const [type, setType] = useState(() => SYMS[0]?.value || 'ean13');
   const [filter, setFilter] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [error, setError] = useState('');
-  const [imgUrl, setImgUrl] = useState('');
-  const [imageKey, setImageKey] = useState(0);
   const [inverted, setInverted] = useState(false);
-  const [outputFormat, setOutputFormat] = useState('svg');
-  const [pngScale, setPngScale] = useState(1);
-  const canvasRef = useRef(null);
-  const svgRef = useRef(null);
-  const debounceRef = useRef(null);
   const dropdownRef = useRef(null);
   const historyAddRef = useRef(null);
-  const [paramDecoded, setParamDecoded] = useState(false);
-  const [initialLoadDone, setInitialLoadDone] = useState(false);
-
-  // Load outputFormat preference from localStorage
-  useEffect(() => {
-    try {
-      const savedFormat = localStorage.getItem('barcode_output_format');
-      if (savedFormat === 'png' || savedFormat === 'svg') {
-        setOutputFormat(savedFormat);
-      }
-      const savedScale = localStorage.getItem('barcode_png_scale');
-      if (savedScale) {
-        const scale = Number(savedScale);
-        if (scale >= 1 && scale <= 5) {
-          setPngScale(scale);
-        }
-      }
-    } catch {}
-  }, []);
-
-  // Fallback priority (runs once after potential param decode): example
-  useEffect(() => {
-    if (initialLoadDone) return;
-    
-    const url = new URL(window.location.href);
-    const raw = url.searchParams.get('barcode');
-    let validParam = false;
-
-    if (raw) {
-      try {
-        const decodedStr = atob(raw);
-        const parsed = JSON.parse(decodedStr);
-        if (parsed && typeof parsed === 'object' && typeof parsed.text === 'string' && typeof parsed.type === 'string') {
-           if (SYMS.some(sym => sym.value === parsed.type)) {
-             validParam = true;
-           }
-        }
-      } catch {}
-    }
-
-    if (validParam) {
-      // Let Base64QuerySync handle it via onDecoded
-      return;
-    }
-    
-    // No URL param OR invalid param - use first example as default
-    if (SYMS.length > 0) {
-      const first = SYMS[0];
-      setType(first.value);
-      if (first.examples && first.examples.length > 0) {
-        setText(first.examples[0].value);
-      }
-    }
-    setInitialLoadDone(true);
-  }, [initialLoadDone]);
+  const urlHydratedRef = useRef(false);
 
   // Filtered list
   const filteredSyms = useMemo(() => {
@@ -197,99 +136,42 @@ const BarcodeTool = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // URL syncing handled via Base64QuerySync component below.
-
-  // Render barcode to canvas/SVG and capture data URL
-  const renderBarcode = () => {
-    let success = false;
-    try {
-      // Get the height and width for the current barcode type
-      const symConfig = SYMS.find(s => s.value === type);
-      const barcodeHeight = symConfig?.height || 12;
-      const barcodeWidth = symConfig?.width;
-      
+  const {
+    canvasRef,
+    copyImage: handleCopyImage,
+    download: handleDownload,
+    error,
+    imageKey,
+    imgUrl,
+    outputFormat,
+    pngScale,
+    setOutputFormat,
+    setPngScale,
+    share: handleShare,
+  } = useBwipOutput({
+    storagePrefix: 'barcode',
+    createOptions: () => {
+      const symConfig = SYMS.find((sym) => sym.value === type);
       const options = {
         bcid: type,
-        text: text,
+        text,
         scale: 3,
-        height: barcodeHeight,
+        height: symConfig?.height || 12,
         includetext: true,
         textxalign: 'center',
-      };  
-      // Add width for 2D codes to maintain aspect ratio
-      if (barcodeWidth) {
-        options.width = barcodeWidth;
+      };
+      if (symConfig?.width) options.width = symConfig.width;
+      return options;
+    },
+    dependencies: [text, type],
+    fileBaseName: () => `${type}-${text}`,
+    shareTitle: 'Barcode',
+    onRendered: () => {
+      if (urlHydratedRef.current && text && historyAddRef.current) {
+        historyAddRef.current({ text, type });
       }
-      
-      if (outputFormat === 'svg') {
-        const svg = bwipjs.toSVG(options);
-        // Use data URL instead of blob URL for CSP compatibility (offline mode)
-        const url = 'data:image/svg+xml,' + encodeURIComponent(svg);
-        setImgUrl(url);
-        setImageKey(prev => prev + 1);
-        if (svgRef.current) svgRef.current = svg;
-      } else {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        // Always ensure a solid white background
-        const ctx = canvas.getContext('2d');
-        ctx.save();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.restore();
-
-        bwipjs.toCanvas(canvas, options);
-
-        // If scale > 1, create a scaled version with sharp edges
-        if (pngScale > 1) {
-          const scaledCanvas = document.createElement('canvas');
-          scaledCanvas.width = canvas.width * pngScale;
-          scaledCanvas.height = canvas.height * pngScale;
-          const scaledCtx = scaledCanvas.getContext('2d');
-          
-          // Disable image smoothing for sharp pixel scaling
-          scaledCtx.imageSmoothingEnabled = false;
-          scaledCtx.webkitImageSmoothingEnabled = false;
-          scaledCtx.mozImageSmoothingEnabled = false;
-          scaledCtx.msImageSmoothingEnabled = false;
-          
-          scaledCtx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
-          const url = scaledCanvas.toDataURL('image/png');
-          setImgUrl(url);
-          setImageKey(prev => prev + 1);
-        } else {
-          const url = canvas.toDataURL('image/png');
-          setImgUrl(url);
-          setImageKey(prev => prev + 1);
-        }
-      }
-      setError('');
-      success = true;
-    } catch (e) {
-      setError(e.message || 'Failed to render');
-    }
-    
-    // Save to history only after successful render
-    const willSave = success && initialLoadDone && text && historyAddRef.current;
-    if (willSave) {
-      historyAddRef.current({ text, type });
-    }
-  };
-
-  // Save outputFormat preference to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('barcode_output_format', outputFormat);
-    } catch {}
-  }, [outputFormat]);
-
-  // Save pngScale preference to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('barcode_png_scale', String(pngScale));
-    } catch {}
-  }, [pngScale]);
+    },
+  });
 
   // Auto-uppercase text for barcode types that require it
   useEffect(() => {
@@ -298,47 +180,6 @@ const BarcodeTool = () => {
       setText(text.toUpperCase());
     }
   }, [text, type]);
-
-  // Debounce rendering
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => { renderBarcode(); }, 250);
-    return () => debounceRef.current && clearTimeout(debounceRef.current);
-  }, [text, type, outputFormat, pngScale]);
-
-  const handleDownload = () => {
-    if (!imgUrl) return;
-    const a = document.createElement('a');
-    a.href = imgUrl;
-    const ext = outputFormat === 'svg' ? 'svg' : 'png';
-    a.download = `${type}-${text}.${ext}`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  };
-
-  const handleCopyImage = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !navigator.clipboard || typeof ClipboardItem === 'undefined') return;
-    try {
-      await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
-        .then(async (blob) => {
-          if (blob) {
-            await navigator.clipboard.write([new window.ClipboardItem({ 'image/png': blob })]);
-          }
-        });
-    } catch (e) {
-      // ignore
-    }
-  };
-
-  const handleShare = async () => {
-    const shareUrl = window.location.href;
-    if (navigator.share) {
-      try { await navigator.share({ title: 'Barcode', url: shareUrl }); return; } catch {}
-    }
-    try { await navigator.clipboard.writeText(shareUrl); } catch {}
-  };
 
   const restoreEntry = (ent) => {
     setText(ent.text); setType(ent.type);
@@ -373,9 +214,8 @@ const BarcodeTool = () => {
             }
             setType(type);
             setText(text);
-            setParamDecoded(true);
-            setInitialLoadDone(true);
           }}
+          onHydrated={() => { urlHydratedRef.current = true; }}
           queryParam="barcode"
           toolHash="#barcode"
           updateOnMount={false}
@@ -402,7 +242,7 @@ const BarcodeTool = () => {
               <div className="mt-1 relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="w-full text-xs px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-jwtPurple text-left flex items-center justify-between"
+                  className="w-full text-xs px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-hidden focus:ring-2 focus:ring-jwtPurple text-left flex items-center justify-between"
                 >
                   <span>{SYMS.find(s => s.value === type)?.label || type}</span>
                   <span className="text-gray-400">{dropdownOpen ? '▲' : '▼'}</span>
@@ -415,7 +255,7 @@ const BarcodeTool = () => {
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
                         placeholder="Search barcode types..."
-                        className="w-full text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-jwtPurple"
+                        className="w-full text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-hidden focus:ring-1 focus:ring-jwtPurple"
                         autoFocus
                       />
                     </div>
@@ -484,54 +324,12 @@ const BarcodeTool = () => {
                 </select>
               </div>
             )}
-            <div>
-              <label className="label">Output Format</label>
-              <div className="mt-1 flex gap-2">
-                <button
-                  onClick={() => setOutputFormat('png')}
-                  className={`flex-1 px-3 py-2 text-xs rounded border transition ${
-                    outputFormat === 'png'
-                      ? 'bg-jwtBlue text-white border-jwtBlue'
-                      : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  PNG
-                </button>
-                <button
-                  onClick={() => setOutputFormat('svg')}
-                  className={`flex-1 px-3 py-2 text-xs rounded border transition ${
-                    outputFormat === 'svg'
-                      ? 'bg-jwtBlue text-white border-jwtBlue'
-                      : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  SVG
-                </button>
-              </div>
-            </div>
-            {outputFormat === 'png' && (
-              <div>
-                <label className="label">
-                  PNG Scale: {pngScale}x
-                </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  step="1"
-                  value={pngScale}
-                  onChange={(e) => setPngScale(Number(e.target.value))}
-                  className="mt-1 w-full"
-                />
-                <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 mt-1">
-                  <span>1x</span>
-                  <span>2x</span>
-                  <span>3x</span>
-                  <span>4x</span>
-                  <span>5x</span>
-                </div>
-              </div>
-            )}
+            <ImageOutputControls
+              outputFormat={outputFormat}
+              pngScale={pngScale}
+              setOutputFormat={setOutputFormat}
+              setPngScale={setPngScale}
+            />
             <div className="flex gap-2 flex-wrap text-xs">
               <button onClick={handleDownload} className="btn-primary btn-sm">Download {outputFormat.toUpperCase()}</button>
               <button onClick={handleCopyImage} className="btn-secondary btn-sm">Copy Image</button>

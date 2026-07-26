@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import Base64QuerySync from './Base64QuerySync';
 import HistoryList from './HistoryList';
 import { encodeBigIntToBase32, encodeBigIntToBase64, encodeBigIntToBase85 } from './utils';
+import { useDebouncedEffect } from './hooks';
+import { copyText as copyToClipboard } from './browserActions';
+import { readLatestHistoryValue } from './historyStorage';
 
 // IPv4 and IPv6 Address calculator
 // Supports CIDR notation, network/broadcast calculation, NAT64, type detection, etc.
@@ -365,53 +368,19 @@ function base64ToIp(b64) {
 // Base64 query param syncing now handled via Base64QuerySync component.
 
 const IPCalcTool = () => {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState(
+    () => readLatestHistoryValue('ipcalc_history_v1') || '192.168.1.0/24',
+  );
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [checkIp, setCheckIp] = useState('');
   const [checkResult, setCheckResult] = useState('');
   const [nat64PrefixInput, setNat64PrefixInput] = useState('64:ff9b::/96');
-  const debounceRef = useRef(null);
   const historyAddRef = useRef(null);
   const [copiedField, setCopiedField] = useState('');
   const [hoveredField, setHoveredField] = useState('');
-  const paramDecodedRef = useRef(false);
-  const [paramDecoded, setParamDecoded] = useState(false);
-  const [paramChecked, setParamChecked] = useState(false);
+  const urlHydratedRef = useRef(false);
   const [showEncodings, setShowEncodings] = useState(false);
-
-  // Early attempt to decode URL param before any fallback runs
-  useEffect(() => {
-    try {
-      const raw = new URL(window.location.href).searchParams.get('value');
-      if (raw) {
-        try {
-          const decoded = atob(raw);
-          if (decoded && /[.:]/.test(decoded)) {
-            setInput(decoded);
-            setParamDecoded(true);
-          }
-        } catch {}
-      }
-    } catch {}
-    setParamChecked(true);
-  }, []);
-
-  // Fallback to history or default if param absent/invalid
-  useEffect(() => {
-    if (!paramChecked || paramDecoded) return;
-    try {
-      const raw = localStorage.getItem('ipcalc_history_v1');
-      if (raw) {
-        const items = JSON.parse(raw);
-        if (Array.isArray(items) && items.length > 0) {
-          setInput(items[0].value);
-          return;
-        }
-      }
-    } catch {}
-    setInput('192.168.1.0/24');
-  }, [paramChecked, paramDecoded]);
 
   const calculate = () => {
     let success = false;
@@ -463,7 +432,7 @@ const IPCalcTool = () => {
     }
     
     // Save to history only after successful validation
-    const willSave = success && paramChecked && input.trim() && historyAddRef.current;
+    const willSave = success && urlHydratedRef.current && input.trim() && historyAddRef.current;
     if (willSave) {
       historyAddRef.current(input.trim());
     }
@@ -561,11 +530,7 @@ const IPCalcTool = () => {
     }
   };
 
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(calculate, 300);
-    return () => debounceRef.current && clearTimeout(debounceRef.current);
-  }, [input]);
+  useDebouncedEffect(calculate, 300, [input]);
 
   const handleCheckIp = () => {
     if (!checkIp.trim() || !result) {
@@ -588,11 +553,10 @@ const IPCalcTool = () => {
   };
 
   const copyText = async (text, fieldLabel) => {
-    try {
-      await navigator.clipboard.writeText(text);
+    if (await copyToClipboard(text)) {
       setCopiedField(fieldLabel);
       setTimeout(() => setCopiedField(''), 1500);
-    } catch {}
+    }
   };
 
   return (
@@ -614,8 +578,6 @@ const IPCalcTool = () => {
                 const ip = base64ToIp(obj.i);
                 const nat64 = obj.n ? base64ToIp(obj.n) : '64:ff9b::/96';
                 if (ip) {
-                  paramDecodedRef.current = true;
-                  setParamDecoded(true);
                   return { input: ip, nat64PrefixInput: nat64 };
                 }
               }
@@ -626,6 +588,7 @@ const IPCalcTool = () => {
             setInput(v.input);
             if (v.nat64PrefixInput) setNat64PrefixInput(v.nat64PrefixInput);
           }}
+          onHydrated={() => { urlHydratedRef.current = true; }}
           queryParam="ip"
           toolHash="#ipcalc"
           updateOnMount={true}
@@ -642,7 +605,7 @@ const IPCalcTool = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="e.g., 192.168.1.0/24 or 2001:db8::/32"
-              className="w-full text-sm font-mono px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-jwtBlue"
+              className="w-full text-sm font-mono px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-hidden focus:ring-2 focus:ring-jwtBlue"
               spellCheck="false"
             />
             {error && <div className="text-xs text-red-600 font-mono">{error}</div>}
@@ -653,7 +616,7 @@ const IPCalcTool = () => {
               value={nat64PrefixInput}
               onChange={(e) => setNat64PrefixInput(e.target.value)}
               placeholder="e.g., 64:ff9b::/96"
-              className="w-full text-sm font-mono px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-jwtPurple"
+              className="w-full text-sm font-mono px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-hidden focus:ring-2 focus:ring-jwtPurple"
               spellCheck="false"
             />
           </div>
@@ -769,7 +732,7 @@ const IPCalcTool = () => {
                   onChange={(e) => setCheckIp(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCheckIp()}
                   placeholder="Enter IP to check"
-                  className="flex-1 text-xs font-mono px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-jwtPurple"
+                  className="flex-1 text-xs font-mono px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-hidden focus:ring-2 focus:ring-jwtPurple"
                   spellCheck="false"
                 />
                 <button

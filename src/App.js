@@ -1,30 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './styles.css';
 import Navbar from './Navbar';
-import JwtTool from './JwtTool';
-import HashTool from './HashTool';
-import EncodeDecodeTool from './EncodeDecodeTool';
-import DateTimeTool from './DateTimeTool';
-import DataFormatTool from './DataFormatTool';
-import BarcodeTool from './BarcodeTool';
-import IPCalcTool from './IPCalcTool';
 import DisclaimerFooter from './DisclaimerFooter';
-import CryptoTool from './CryptoTool';
-import PasswordTool from './PasswordTool';
-import PasswordHashTool from './PasswordHashTool';
-import UuidTool from './UuidTool';
-import WifiQRTool from './WifiQRTool';
-import UnitsConverterTool from './UnitsConverterTool';
+import { allTools, toolIds } from './toolsRegistry';
 
 const App = () => {
   const [activeTool, setActiveTool] = useState('jwt');
 
   // Sync tool selection with location.hash and listen for external hash changes
   useEffect(() => {
-    const allowed = ['jwt','hash','encode','barcode','ipcalc','datetime','format','crypto','password','passwordhash','uuid','wifiqr','units','text'];
     const applyFromHash = () => {
       const raw = window.location.hash.replace(/^#/,'').trim();
-      if (allowed.includes(raw)) setActiveTool(raw);
+      if (toolIds.has(raw)) setActiveTool(raw);
     };
     applyFromHash();
     window.addEventListener('hashchange', applyFromHash);
@@ -45,19 +32,11 @@ const App = () => {
       {/* Main content area - offset for sidebar on desktop, top bar on mobile */}
       <div className="h-full flex flex-col main-content-offset">
         <div className="flex-1 overflow-auto">
-          <div className={activeTool === 'jwt' ? '' : 'hidden'}><JwtTool /></div>
-          <div className={activeTool === 'hash' ? '' : 'hidden'}><HashTool /></div>
-          <div className={activeTool === 'encode' ? '' : 'hidden'}><EncodeDecodeTool /></div>
-          <div className={activeTool === 'barcode' ? '' : 'hidden'}><BarcodeTool /></div>
-          <div className={activeTool === 'ipcalc' ? '' : 'hidden'}><IPCalcTool /></div>
-          <div className={activeTool === 'datetime' ? '' : 'hidden'}><DateTimeTool /></div>
-          <div className={activeTool === 'format' ? '' : 'hidden'}><DataFormatTool /></div>
-          <div className={activeTool === 'crypto' ? '' : 'hidden'}><CryptoTool /></div>
-          <div className={activeTool === 'password' ? '' : 'hidden'}><PasswordTool /></div>
-          <div className={activeTool === 'passwordhash' ? '' : 'hidden'}><PasswordHashTool /></div>
-          <div className={activeTool === 'uuid' ? '' : 'hidden'}><UuidTool /></div>
-          <div className={activeTool === 'wifiqr' ? '' : 'hidden'}><WifiQRTool /></div>
-          <div className={activeTool === 'units' ? '' : 'hidden'}><UnitsConverterTool /></div>
+          {allTools.map(({ id, component: ToolComponent }) => (
+            <div key={id} className={activeTool === id ? '' : 'hidden'}>
+              <ToolComponent />
+            </div>
+          ))}
         </div>
         <DisclaimerFooter />
       </div>

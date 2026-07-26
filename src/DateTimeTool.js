@@ -142,7 +142,7 @@ const DateTimeTool = () => {
               value={tsInput}
               onChange={e=>setTsInput(e.target.value)}
               placeholder="Enter unix timestamp (seconds or ms)"
-              className="w-full text-xs font-mono px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-jwtBlue"
+              className="w-full text-xs font-mono px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-hidden focus:ring-2 focus:ring-jwtBlue"
               spellCheck="false"
             />
             {errorTs && <div className="mt-2 text-[10px] text-red-600 font-mono">{errorTs}</div>}
@@ -168,14 +168,14 @@ const DateTimeTool = () => {
                 value={dtInput}
                 onChange={e=>setDtInput(e.target.value)}
                 placeholder="Enter date string (ISO, YYYY-MM-DD, RFC2822, etc.)"
-                className="flex-1 text-xs font-mono px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-jwtPurple"
+                className="flex-1 text-xs font-mono px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-hidden focus:ring-2 focus:ring-jwtPurple"
                 spellCheck="false"
               />
               <input
                 type="datetime-local"
                 value={toDatetimeLocal(dtInput)}
                 onChange={e => setDtInput(new Date(e.target.value).toISOString())}
-                className="text-xs px-2 py-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-jwtPurple"
+                className="text-xs px-2 py-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-hidden focus:ring-2 focus:ring-jwtPurple"
               />
             </div>
             {errorDt && <div className="mt-2 text-[10px] text-red-600 font-mono">{errorDt}</div>}

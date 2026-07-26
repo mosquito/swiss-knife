@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TextareaWithLineNumbers from './TextareaWithLineNumbers';
 import { generateKeysAsync, extractPublicFromPrivateAsync, isPrivateKey } from './utils';
+import { copyText } from './browserActions';
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -179,7 +180,7 @@ const CryptoTool = () => {
     } catch (e) { setAesError(e.message || 'AES error'); }
   };
 
-  const handleCopy = async (t) => { try { await navigator.clipboard.writeText(t); } catch {} };
+  const handleCopy = copyText;
   const clearRsa = () => { setRsaSignature(''); setRsaResult(''); setRsaError(''); };
   const clearAes = () => { setAesInput(''); setAesOutput(''); setAesError(''); };
 
